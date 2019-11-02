@@ -32,7 +32,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -320,27 +319,7 @@ public class ConceptVuforiaSkyStoneNavigationLK extends LinearOpMode {
         // Tap the preview window to receive a fresh image.
 
         targetsSkyStone.activate();
-
-
-        boolean toggleY = false;
-        boolean enableLight = false;
-
         while (!isStopRequested()) {
-
-            // trying to use the flash
-            if (gamepad1.y) {
-                toggleY = true;
-            }
-            else if (toggleY) {
-                toggleY = false;
-                enableLight = !enableLight;
-                //enableLight ^= true;
-                CameraDevice.getInstance().setFlashTorchMode(enableLight);
-            }
-
-            telemetry.addData("Toggle", toggleY);
-            telemetry.addData("Light", enableLight);
-
 
             // check all the trackable targets to see which one (if any) is visible.
             targetVisible = false;
