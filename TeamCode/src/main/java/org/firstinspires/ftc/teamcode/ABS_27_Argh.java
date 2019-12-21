@@ -330,7 +330,7 @@ public class ABS_27_Argh extends LinearOpMode {
                     motor0B.setPower(0.05);
                     HomingDebugDelay();
                     State_Homing += 1;
-                    Flag_Grabber_IsParked = 0;
+                    Flag_Grabber_IsParked = 0;  // !!!!!!!!!!!!!!!!!!!!!!!!
                     // (set up for next state)
                     // Home the jib - Rough
                     motor1B.setPower(0);
