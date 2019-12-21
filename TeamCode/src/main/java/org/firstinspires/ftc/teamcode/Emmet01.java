@@ -27,8 +27,11 @@ public class Emmet01 extends LinearOpMode {
     private Servo servoRightWhisker;
 
 
-    private ElapsedTime Timer_Loop;
+    private ElapsedTime Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private double Time_Loop;
+    private ElapsedTime timerHoming = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private double timeHoming;
+    private final int homingTimeLimit = 10;
 
     private double driveSpeedLimit;
 
@@ -65,8 +68,14 @@ public class Emmet01 extends LinearOpMode {
     private double controlJibPower;
 
     private double grabberPosition;
+    private final double grabberOpen = 0.6;
+    private final double grabberClosed = 0.4;
+    private final double grabberSafe = 0.8;
+    private final double grabberHoming = 0.6;
 
     private boolean flagCraneIsHomed = false;
+    private boolean flagMastHolding = false;
+    private boolean flagJibHolding = false;
     private boolean flagEmmetIsCoolerThanYou = true;
 
     /**
@@ -94,7 +103,7 @@ public class Emmet01 extends LinearOpMode {
             // Put run blocks here.
             while (opModeIsActive()) {
                 Telemetry_LoopStart();
-                ReadControls();
+                readControls();
                 // Disallow some functions when homing
                 if (homingState == 0) {
                     SetCraneLimits();
@@ -102,7 +111,7 @@ public class Emmet01 extends LinearOpMode {
                     ControlJib();
                     ControlServos();
                 } else {
-                    HomeCrane();
+                    homeCrane();
                 }
                 controlDrivetrain();
                 Telemetry_LoopEnd();
@@ -134,7 +143,7 @@ public class Emmet01 extends LinearOpMode {
      * Describe this function...
      */
     private void SetVariables() {
-        Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        //Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     }
 
     /**
@@ -182,7 +191,7 @@ public class Emmet01 extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void ReadControls() {
+    private void readControls() {
         if (gamepad1.left_bumper) {
             // Left Bumper = Slow
             driveSpeedLimit = 0.1;
@@ -197,6 +206,11 @@ public class Emmet01 extends LinearOpMode {
         controlStrafe = gamepad1.left_stick_x;
         controlRotate = gamepad1.right_stick_x;
         telemetry.addData("DRIVE STRAFE ROTATE", JavaUtil.formatNumber(controlDrive, 2) + "   " + JavaUtil.formatNumber(controlStrafe, 2) + "   " + JavaUtil.formatNumber(controlRotate, 2));
+
+        //only allow homing if it's not already homing
+        if (homingState == 0) {
+            if (gamepad2.left_bumper && gamepad2.right_bumper) homingState = 1;
+        }
     }
 
     /**
@@ -241,7 +255,104 @@ public class Emmet01 extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void HomeCrane() {
+    private void homeCrane() {
+        if (homingState == 1) timerHoming.reset();
+
+        // do this every loop
+        timeHoming = timerHoming.seconds();
+        mastPositionCurrent = motorMast.getCurrentPosition();
+        jibPositionCurrent = motorJib.getCurrentPosition();
+        if (gamepad2.b || timeHoming > homingTimeLimit) homingState = 8001;
+
+        //homing is cancelled
+        if (homingState == 8001) {
+            motorMast.setPower(0);
+            motorMast.setTargetPosition(mastPositionCurrent);
+            motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorMast.setPower(0.05);
+            motorJib.setPower(0);
+            motorJib.setTargetPosition(jibPositionCurrent);
+            motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorJib.setPower(0.05);
+            grabberPosition = grabberOpen;
+            homingState = 0;
+        }
+
+        //initialize the routine
+        if (homingState == 1) {
+            motorMast.setPower(0);
+            motorJib.setPower(0);
+            servoGrabber.setPosition(grabberHoming);
+            grabberPosition = grabberSafe;
+            flagCraneIsHomed = false;
+            flagMastHolding = false;
+            flagJibHolding = false;
+            //get ready for next state
+            homingState++;
+            motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorMast.setPower(0.5);
+        }
+
+        //moves mast a safe distance up so jib clears the foam
+        if (homingState == 2) {
+            if (digitalMastHigh.getState() || mastPositionCurrent >= mastPositionJibSafe) {
+                // hold the mast at its current position
+                motorMast.setPower(0);
+                motorMast.setTargetPosition(mastPositionCurrent);
+                motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorMast.setPower(0.05);
+                //get ready for next state
+                homingState++;
+                servoGrabber.setPosition(grabberClosed);
+                motorJib.setPower(0);
+                motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motorJib.setPower(-0.5);
+            }
+        }
+
+        //retracting jib until limit switch
+        if (homingState == 3) {
+            if (digitalJibLow.getState()) {
+                motorJib.setPower(0);
+                motorJib.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                jibPositionCurrent = 0;
+                //get ready for next state
+                homingState++;
+                motorJib.setPower(0);
+                motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motorJib.setPower(0.1);
+            }
+        }
+
+        //extend jib until limit switch is released
+        if (homingState == 4) {
+            if (!digitalJibLow.getState() || jibPositionCurrent > 250) {
+                motorJib.setPower(0);
+                motorJib.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                jibPositionCurrent = 0;
+                //get ready for the next state
+                homingState++;
+                motorJib.setPower(0);
+                motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motorJib.setPower(1);
+            }
+        }
+
+        // extend jib to safe spot
+        if (homingState == 5) {
+            if (jibPositionCurrent >= jibPositionPark) {
+                //Hold jib in current position
+                motorJib.setPower(0);
+                motorJib.setTargetPosition(jibPositionCurrent);
+                motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorJib.setPower(0.05);
+                //get ready for next state
+                homingState++;
+                motorMast.setPower(0);
+                //motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                //motorMast.setPower(0.25);
+            }
+        }
     }
 
     /**
