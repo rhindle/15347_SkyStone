@@ -107,7 +107,7 @@ public class Emmet01 extends LinearOpMode {
                 // Disallow some functions when homing
                 if (homingState == 0) {
                     SetCraneLimits();
-                    ControlMast();
+                    controlMast();
                     ControlJib();
                     ControlServos();
                 } else {
@@ -207,6 +207,9 @@ public class Emmet01 extends LinearOpMode {
         controlRotate = gamepad1.right_stick_x;
         telemetry.addData("DRIVE STRAFE ROTATE", JavaUtil.formatNumber(controlDrive, 2) + "   " + JavaUtil.formatNumber(controlStrafe, 2) + "   " + JavaUtil.formatNumber(controlRotate, 2));
 
+        controlMastPower = -gamepad2.left_stick_y;
+        controlJibPower = gamepad2.right_stick_x;
+
         //only allow homing if it's not already homing
         if (homingState == 0) {
             if (gamepad2.left_bumper && gamepad2.right_bumper) homingState = 1;
@@ -276,6 +279,8 @@ public class Emmet01 extends LinearOpMode {
             motorJib.setPower(0.05);
             grabberPosition = grabberOpen;
             homingState = 0;
+            flagJibHolding = true;
+            flagMastHolding = true;
         }
 
         //initialize the routine
@@ -301,12 +306,13 @@ public class Emmet01 extends LinearOpMode {
                 motorMast.setTargetPosition(mastPositionCurrent);
                 motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 motorMast.setPower(0.05);
+                flagMastHolding = true;
                 //get ready for next state
                 homingState++;
                 servoGrabber.setPosition(grabberClosed);
                 motorJib.setPower(0);
                 motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                motorJib.setPower(-0.5);
+                motorJib.setPower(-0.35);
             }
         }
 
@@ -316,6 +322,7 @@ public class Emmet01 extends LinearOpMode {
                 motorJib.setPower(0);
                 motorJib.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 jibPositionCurrent = 0;
+                homingDelay();
                 //get ready for next state
                 homingState++;
                 motorJib.setPower(0);
@@ -346,12 +353,63 @@ public class Emmet01 extends LinearOpMode {
                 motorJib.setTargetPosition(jibPositionCurrent);
                 motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 motorJib.setPower(0.05);
+                flagJibHolding = true;
                 //get ready for next state
                 homingState++;
                 motorMast.setPower(0);
-                //motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                //motorMast.setPower(0.25);
+                motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motorMast.setPower(-0.5);
+                flagMastHolding = false;
+                servoGrabber.setPosition(grabberOpen);
             }
+        }
+
+        // lower mast to limit switch
+        if (homingState == 6) {
+            if (digitalMastLow.getState()) {
+                motorMast.setPower(0);
+                motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                mastPositionCurrent = 0;
+                //get ready for next state
+                homingState++;
+                motorMast.setPower(0);
+                motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motorMast.setPower(0.25);
+            }
+        }
+
+        //lift mast for second pass
+        if (homingState == 7) {
+            if (mastPositionCurrent >= 250) {
+                //get ready for next state
+                homingState++;
+                motorMast.setPower(0);
+                motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                motorMast.setPower(-0.2);
+            }
+        }
+
+        //lower with precision
+        if (homingState == 8) {
+            if (digitalMastLow.getState()) {
+                motorMast.setPower(0);
+                motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                mastPositionCurrent = 0;
+                //get ready for next state
+                homingState++;
+                motorMast.setPower(0);
+                motorMast.setTargetPosition(0);
+                motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorMast.setPower(0.05);
+                flagMastHolding = true;
+            }
+        }
+
+        //all done :)
+        if (homingState == 9) {
+            flagCraneIsHomed = true;
+            servoGrabber.setPosition(grabberSafe);
+            homingState = 0;
         }
     }
 
@@ -364,13 +422,95 @@ public class Emmet01 extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void ControlMast() {
+    private void controlMast() {
+        int slowPoint = 2000;
+
+        mastPositionCurrent = motorMast.getCurrentPosition();
+        //upper limits
+        if (controlMastPower > 0 && digitalMastHigh.getState()) controlMastPower = 0;
+        if (controlMastPower > 0 && mastPositionCurrent > mastPositionMax) controlMastPower = 0;
+        //lower limits
+        if (controlMastPower < 0 && digitalMastLow.getState()) controlMastPower = 0;
+        if (controlMastPower < 0 && mastPositionCurrent < mastPositionMin) controlMastPower = 0;
+        //slow down
+        if (controlMastPower > 0 && (mastPositionMax - mastPositionCurrent) < slowPoint) {
+            controlMastPower = controlMastPower * (mastPositionMax - mastPositionCurrent) / slowPoint;
+            controlMastPower = Math.max(0.05, controlMastPower);
+        }
+        if (controlMastPower < 0 && (mastPositionCurrent - mastPositionMin) < slowPoint) {
+            controlMastPower = controlMastPower * (mastPositionCurrent - mastPositionMin) / slowPoint;
+            controlMastPower = Math.min(-0.05, controlMastPower);
+        }
+        //hold if power is 0
+        if (controlMastPower == 0) {
+            if (!flagMastHolding) {
+                motorMast.setPower(0);
+                motorMast.setTargetPosition(mastPositionCurrent);
+                motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorMast.setPower(0.05);
+                flagMastHolding = true;
+                mastPositionHold = mastPositionCurrent;
+            }
+            telemetry.addData("Mast Holding At", mastPositionCurrent);
+        }
+        //if power isn't 0 make mast go that speed
+        if (controlMastPower != 0) {
+            if (flagMastHolding){
+                motorMast.setPower(0);
+                motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                flagMastHolding = false;
+            }
+            motorMast.setPower(controlMastPower);
+            telemetry.addData("Mast Power", controlMastPower);
+        }
     }
 
     /**
      * Describe this function...
      */
     private void ControlJib() {
+        int slowPoint = 2000;
+        int jibPositionMinLocal = jibPositionPark;
+
+        if (grabberPosition == grabberClosed) jibPositionMinLocal = jibPositionGrab;
+        jibPositionCurrent = motorJib.getCurrentPosition();
+        //upper limits
+        if (controlJibPower > 0 && digitalJibHigh.getState()) controlJibPower = 0;
+        if (controlJibPower > 0 && jibPositionCurrent > jibPositionMax) controlJibPower = 0;
+        //lower limits
+        if (controlJibPower < 0 && digitalJibLow.getState()) controlJibPower = 0;
+        if (controlJibPower < 0 && jibPositionCurrent < jibPositionMinLocal) controlJibPower = 0;
+        //slow down
+        if (controlJibPower > 0 && (jibPositionMax - jibPositionCurrent) < slowPoint) {
+            controlJibPower = controlJibPower * (jibPositionMax - jibPositionCurrent) / slowPoint;
+            controlJibPower = Math.max(0.05, controlJibPower);
+        }
+        if (controlJibPower < 0 && (jibPositionCurrent - jibPositionMinLocal) < slowPoint) {
+            controlJibPower = controlJibPower * (jibPositionCurrent - jibPositionMinLocal) / slowPoint;
+            controlJibPower = Math.min(-0.05, controlJibPower);
+        }
+        //hold if power is 0
+        if (controlJibPower == 0) {
+            if (!flagJibHolding) {
+                motorJib.setPower(0);
+                motorJib.setTargetPosition(jibPositionCurrent);
+                motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorJib.setPower(0.05);
+                flagJibHolding = true;
+                jibPositionHold = jibPositionCurrent;
+            }
+            telemetry.addData("Jib Holding At", jibPositionCurrent);
+        }
+        //if power isn't 0 make jib go that speed
+        if (controlJibPower != 0) {
+            if (flagJibHolding){
+                motorJib.setPower(0);
+                motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                flagJibHolding = false;
+            }
+            motorJib.setPower(controlJibPower);
+            telemetry.addData("Jib Power", controlJibPower);
+        }
     }
 
     /**
@@ -405,5 +545,10 @@ public class Emmet01 extends LinearOpMode {
         motorLeftRear.setPower(leftRearPower);
         motorRightRear.setPower(rightRearPower);
 
+    }
+
+    //for the jib
+    private void homingDelay() {
+        sleep(50);
     }
 }
