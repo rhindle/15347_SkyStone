@@ -34,6 +34,7 @@ public class Emmet01 extends LinearOpMode {
     private final int homingTimeLimit = 10;
 
     private double driveSpeedLimit;
+    private final double driveSpeedDefault = 0.35;
 
     private double controlDrive;
     private double controlStrafe;
@@ -55,17 +56,10 @@ public class Emmet01 extends LinearOpMode {
     private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 1100, 2400, 3700, 5000, 6200};
 
     private int mastPositionHold;
-    //private int Pos_Mast_WiresSafe;
-    //private int Pos_Mast_Max;
-    //private int Pos_Mast_Min;
     private int mastPositionCurrent;
     private double controlMastPower;
 
     private int jibPositionHold;
-    //private int Pos_Jib_Low_MastSafe;
-    //private int Pos_Jib_WiresSafe;
-    //private int Pos_Jib_Max;
-    private int jibPositionTempMin;
     private int jibPositionCurrent;
     private double controlJibPower;
 
@@ -85,9 +79,6 @@ public class Emmet01 extends LinearOpMode {
     private boolean flagJibHolding = false;
     private boolean flagEmmetIsCoolerThanYou = true;
 
-    /**
-     * This function is executed when this Op Mode is selected from the Driver Station.
-     */
     @Override
     public void runOpMode() {
         digitalMastHigh = hardwareMap.digitalChannel.get("digital0");
@@ -105,13 +96,13 @@ public class Emmet01 extends LinearOpMode {
         servoRightWhisker = hardwareMap.servo.get("servo2");
 
 
-        Initialize();
+        initialize();
         if (opModeIsActive()) {
             // Put run blocks here.
             while (opModeIsActive()) {
                 Telemetry_LoopStart();
                 readControls();
-                // Disallow some functions when homing
+                // Don't allow some functions when homing
                 if (homingState == 0) {
                     controlMast();
                     controlJib();
@@ -126,12 +117,9 @@ public class Emmet01 extends LinearOpMode {
         }
     }
 
-    /**
-     * Describe this function...
-     */
-    private void Initialize() {
+    private void initialize() {
         // Set motor directions and modes
-        InitMotors();
+        initMotors();
         grabberPosition = grabberSafe;
         // Set digital i/o
         digitalMastHigh.setMode(DigitalChannel.Mode.INPUT);
@@ -146,10 +134,7 @@ public class Emmet01 extends LinearOpMode {
         }
     }
 
-    /**
-     * Describe this function...
-     */
-    private void InitMotors() {
+    private void initMotors() {
         motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         motorLeftRear.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -179,29 +164,41 @@ public class Emmet01 extends LinearOpMode {
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
     }
 
-    /**
-     * Describe this function...
-     */
     private double CalculateLoopTime() {
         Time_Loop = Timer_Loop.milliseconds();
         Timer_Loop.reset();
         return Time_Loop;
     }
 
-    /**
-     * Describe this function...
-     */
     private void readControls() {
-        if (gamepad1.left_bumper) {
-            // Left Bumper = Slow
-            driveSpeedLimit = 0.1;
-        } else if (gamepad1.right_bumper) {
-            // Right Bumper = Maximum
-            driveSpeedLimit = 1;
+//        if (gamepad1.left_bumper) {
+//            // Left Bumper = Slow
+//            driveSpeedLimit = 0.1;
+//        } else if (gamepad1.right_bumper) {
+//            // Right Bumper = Maximum
+//            driveSpeedLimit = 1;
+//        } else {
+//            // Otherwise Medium Speed
+//            driveSpeedLimit = 0.5;
+//        }
+
+        // speed limiting
+        if (gamepad1.left_trigger > 0) {
+            driveSpeedLimit = driveSpeedDefault - gamepad1.left_trigger * (driveSpeedDefault - 0.15);
+        } else if (gamepad1.right_trigger > 0) {
+            driveSpeedLimit = driveSpeedDefault + gamepad1.right_trigger * (1 - driveSpeedDefault);
         } else {
-            // Otherwise Medium Speed
-            driveSpeedLimit = 0.5;
+            driveSpeedLimit = driveSpeedDefault;
         }
+        if (homingState != 0) {
+            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
+        }
+        if (mastPositionCurrent > 1500 || jibPositionCurrent > 2500) {
+            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
+        }
+        telemetry.addData("Speed Limit", driveSpeedLimit);
+
+        //rest of controls
         controlDrive = -gamepad1.left_stick_y;
         controlStrafe = gamepad1.left_stick_x;
         controlRotate = gamepad1.right_stick_x;
@@ -360,11 +357,9 @@ public class Emmet01 extends LinearOpMode {
             mastPositionHold = mastPositionMin;
             jibPositionHold = jibPositionGrab;        }
     }
-    /**
-     * Describe this function...
-     */
+
     private void Telemetry_LoopStart() {
-        if (flagCraneIsHomed == false) {
+        if (!flagCraneIsHomed) {
             telemetry.addData("Crane Status", "===>  NOT HOMED  <===");
         } else {
             telemetry.addData("Crane Status", "homed");
@@ -377,9 +372,6 @@ public class Emmet01 extends LinearOpMode {
         telemetry.addData("Loop time (ms)", JavaUtil.formatNumber(CalculateLoopTime(), 0));
     }
 
-    /**
-     * Describe this function...
-     */
     private void Telemetry_LoopEnd() {
         // !! Disable Sensor Polling for more speed !!
         // Best to read only values needed each loop
@@ -393,9 +385,6 @@ public class Emmet01 extends LinearOpMode {
         telemetry.addData("Servo", JavaUtil.formatNumber(grabberPosition, 2));
     }
 
-    /**
-     * Describe this function...
-     */
     private void homeCrane() {
         if (homingState == 1) timerHoming.reset();
 
@@ -552,9 +541,6 @@ public class Emmet01 extends LinearOpMode {
         }
     }
 
-    /**
-     * Describe this function...
-     */
     private void controlServos() {
         servoGrabber.setPosition(grabberPosition);
 //        if (whiskerPosition == whiskerUp) {
@@ -564,15 +550,14 @@ public class Emmet01 extends LinearOpMode {
         if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
             servoLeftWhisker.setPosition(whiskerPosition);
             servoRightWhisker.setPosition(whiskerPosition);
+            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
         } else {
             servoLeftWhisker.setPosition(whiskerUp);
             servoRightWhisker.setPosition(whiskerUp);
         }
     }
 
-    /**
-     * Describe this function...
-     */
+
     private void controlMast() {
         int slowPoint = 2000;
 
@@ -616,9 +601,6 @@ public class Emmet01 extends LinearOpMode {
         }
     }
 
-    /**
-     * Describe this function...
-     */
     private void controlJib() {
         int slowPoint = 2000;
         int jibPositionMinLocal = jibPositionPark;
@@ -664,9 +646,7 @@ public class Emmet01 extends LinearOpMode {
         }
     }
 
-    /**
-     * Describe this function...
-     */
+
     private void controlDrivetrain() {
         double leftFrontPower, rightFrontPower, leftRearPower, rightRearPower, driveMaxPower;
 
