@@ -52,6 +52,8 @@ public class Emmet01 extends LinearOpMode {
     private final int jibPositionGrab = 1000;
     private final int jibPositionPlace = 1675;
 
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 1100, 2400, 3700, 5000, 6200};
+
     private int mastPositionHold;
     //private int Pos_Mast_WiresSafe;
     //private int Pos_Mast_Max;
@@ -72,6 +74,11 @@ public class Emmet01 extends LinearOpMode {
     private final double grabberClosed = 0.4;
     private final double grabberSafe = 0.8;
     private final double grabberHoming = 0.6;
+
+    //whiskers
+    private double whiskerPosition;
+    private final double whiskerUp = 0;
+    private final double whiskerDown = 0.8;
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
@@ -106,10 +113,9 @@ public class Emmet01 extends LinearOpMode {
                 readControls();
                 // Disallow some functions when homing
                 if (homingState == 0) {
-                    SetCraneLimits();
                     controlMast();
-                    ControlJib();
-                    ControlServos();
+                    controlJib();
+                    controlServos();
                 } else {
                     homeCrane();
                 }
@@ -124,26 +130,20 @@ public class Emmet01 extends LinearOpMode {
      * Describe this function...
      */
     private void Initialize() {
-        // Initialize variables
-        SetVariables();
         // Set motor directions and modes
         InitMotors();
+        grabberPosition = grabberSafe;
         // Set digital i/o
         digitalMastHigh.setMode(DigitalChannel.Mode.INPUT);
         digitalJibHigh.setMode(DigitalChannel.Mode.INPUT);
+        digitalMastLow.setMode(DigitalChannel.Mode.INPUT);
+        digitalJibLow.setMode(DigitalChannel.Mode.INPUT);
         // Wait for Start...
         while (!isStarted()) {
             // Prompt user to press start buton.
             telemetry.addData(">", "Press Play to start");
             telemetry.update();
         }
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void SetVariables() {
-        //Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     }
 
     /**
@@ -210,12 +210,156 @@ public class Emmet01 extends LinearOpMode {
         controlMastPower = -gamepad2.left_stick_y;
         controlJibPower = gamepad2.right_stick_x;
 
-        //only allow homing if it's not already homing
+        //only allow these controls if it's not homing
         if (homingState == 0) {
             if (gamepad2.left_bumper && gamepad2.right_bumper) homingState = 1;
+            if (gamepad2.b) grabberPosition = grabberOpen;
+            if (gamepad2.a) grabberPosition = grabberClosed;
+            if (gamepad2.back) {
+                whiskerPosition = whiskerDown;
+            } else {
+                whiskerPosition = whiskerUp;
+            }
+        }
+        if (homingState == 0 && flagCraneIsHomed) {
+            if (gamepad2.x) readyGrabber();
+            if (gamepad2.y) multiStageGrab();
+            if (gamepad2.dpad_left) parkGrabber();
+            if (gamepad2.dpad_right) moveGrabberToFoundation();
+            if (gamepad2.dpad_up) moveUpPresetHeights();
+            if (gamepad2.dpad_down) moveDownPresetHeights();
         }
     }
 
+    private void multiStageGrab() {
+        if (grabberPosition != grabberClosed) {
+            if (Math.abs(mastPositionCurrent) < 50){
+                if (jibPositionCurrent > jibPositionGrab - 50 && jibPositionCurrent - jibPositionGrab < 500) {
+                    //make sure robot is stopped
+                    motorLeftFront.setPower(0);
+                    motorRightFront.setPower(0);
+                    motorLeftRear.setPower(0);
+                    motorRightRear.setPower(0);
+                    //push jib into the stone
+                    motorJib.setPower(0);
+                    motorJib.setTargetPosition(jibPositionCurrent + 1000);
+                    motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    motorJib.setPower(0.5);
+                    flagJibHolding = true;
+                    jibPositionHold = jibPositionCurrent + 1000;
+                    while (motorJib.isBusy() && opModeIsActive()) {
+                        //updateTelemetry();
+                        if (gamepad2.b) break;
+                    }
+                    //activate grabber servo
+                    grabberPosition = grabberClosed;
+                    servoGrabber.setPosition(grabberPosition);
+                    sleep(300);
+                    //raise mast
+                    motorMast.setPower(0);
+                    motorMast.setTargetPosition(mastPositionBridgeSafe);
+                    motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    motorMast.setPower(0.3);
+                    flagMastHolding = true;
+                    mastPositionHold =  mastPositionBridgeSafe;
+                    while (motorMast.isBusy() && opModeIsActive()) {
+                        if (gamepad2.b) break;
+                    }
+                    //pull the jib back to bumper
+                    motorJib.setPower(0);
+                    motorJib.setTargetPosition(jibPositionGrab);
+                    motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    motorJib.setPower(-0.5);
+                    flagJibHolding = true;
+                    jibPositionHold = jibPositionGrab;
+                }
+            }
+        }
+    }
+
+    private void moveDownPresetHeights() {
+        for (int i = mastPresetHeights.length - 1; i >= 0; i--) {
+            if (mastPositionCurrent > (mastPresetHeights[i] + 100)) {
+                motorMast.setPower(0);
+                motorMast.setTargetPosition(mastPresetHeights[i]);
+                motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorMast.setPower(-0.5);
+
+                flagMastHolding = true;
+                mastPositionHold = mastPresetHeights[i];
+                break;
+            }
+        }
+    }
+
+    private void moveUpPresetHeights() {
+        for (int i = 0; i < mastPresetHeights.length; i++) {
+            if (mastPositionCurrent < (mastPresetHeights[i] - 100)) {
+                motorMast.setPower(0);
+                motorMast.setTargetPosition(mastPresetHeights[i]);
+                motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorMast.setPower(1);
+
+                flagMastHolding = true;
+                mastPositionHold = mastPresetHeights[i];
+                break;
+            }
+        }
+    }
+
+    private void  moveGrabberToFoundation() {
+        //position the jib
+        motorJib.setPower(0);
+        motorJib.setTargetPosition(jibPositionPlace);
+        motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorJib.setPower(0.5);
+
+        flagJibHolding = true;
+        jibPositionHold = jibPositionPlace;
+    }
+
+    private void parkGrabber() {
+        if (grabberPosition != grabberClosed) {
+            //lower the mast
+            motorMast.setPower(0);
+            motorMast.setTargetPosition(mastPositionMin);
+            motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorMast.setPower(0.5);
+            //position the jib
+            motorJib.setPower(0);
+            motorJib.setTargetPosition(jibPositionPark);
+            motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorJib.setPower(0.5);
+            //ready the grabber
+            grabberPosition = grabberSafe;
+
+            flagMastHolding = true;
+            flagJibHolding = true;
+            mastPositionHold = mastPositionMin;
+            jibPositionHold = jibPositionPark;
+        }
+    }
+
+    private void readyGrabber() {
+        if (grabberPosition != grabberClosed) {
+            //lower the mast
+            motorMast.setPower(0);
+            motorMast.setTargetPosition(mastPositionMin);
+            motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorMast.setPower(0.5);
+            //position the jib
+            motorJib.setPower(0);
+            motorJib.setTargetPosition(jibPositionGrab);
+            motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorJib.setPower(0.5);
+            //ready the grabber
+            grabberPosition = grabberOpen;
+
+            flagMastHolding = true;
+            flagJibHolding = true;
+            mastPositionHold = mastPositionMin;
+            jibPositionHold = jibPositionGrab;        }
+    }
     /**
      * Describe this function...
      */
@@ -247,12 +391,6 @@ public class Emmet01 extends LinearOpMode {
             telemetry.addData("Encoders B", mastPositionCurrent + "   " + jibPositionCurrent);
         }
         telemetry.addData("Servo", JavaUtil.formatNumber(grabberPosition, 2));
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void SetCraneLimits() {
     }
 
     /**
@@ -370,6 +508,7 @@ public class Emmet01 extends LinearOpMode {
                 motorMast.setPower(0);
                 motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 mastPositionCurrent = 0;
+                homingDelay();
                 //get ready for next state
                 homingState++;
                 motorMast.setPower(0);
@@ -416,7 +555,19 @@ public class Emmet01 extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void ControlServos() {
+    private void controlServos() {
+        servoGrabber.setPosition(grabberPosition);
+//        if (whiskerPosition == whiskerUp) {
+//            servoLeftWhisker.setPosition(whiskerPosition);
+//            servoRightWhisker.setPosition(whiskerPosition);
+//        }
+        if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
+            servoLeftWhisker.setPosition(whiskerPosition);
+            servoRightWhisker.setPosition(whiskerPosition);
+        } else {
+            servoLeftWhisker.setPosition(whiskerUp);
+            servoRightWhisker.setPosition(whiskerUp);
+        }
     }
 
     /**
@@ -451,7 +602,7 @@ public class Emmet01 extends LinearOpMode {
                 flagMastHolding = true;
                 mastPositionHold = mastPositionCurrent;
             }
-            telemetry.addData("Mast Holding At", mastPositionCurrent);
+            telemetry.addData("Mast Holding At", mastPositionHold);
         }
         //if power isn't 0 make mast go that speed
         if (controlMastPower != 0) {
@@ -468,7 +619,7 @@ public class Emmet01 extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void ControlJib() {
+    private void controlJib() {
         int slowPoint = 2000;
         int jibPositionMinLocal = jibPositionPark;
 
@@ -499,7 +650,7 @@ public class Emmet01 extends LinearOpMode {
                 flagJibHolding = true;
                 jibPositionHold = jibPositionCurrent;
             }
-            telemetry.addData("Jib Holding At", jibPositionCurrent);
+            telemetry.addData("Jib Holding At", jibPositionHold);
         }
         //if power isn't 0 make jib go that speed
         if (controlJibPower != 0) {
