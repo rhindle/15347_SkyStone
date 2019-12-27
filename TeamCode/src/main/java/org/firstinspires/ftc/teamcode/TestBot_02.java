@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.graphics.Color;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 //import java.util.Locale;
 
 @TeleOp (name="TestBot_02", group="Test")
-//@Disabled
+@Disabled
 public class TestBot_02 extends LinearOpMode {
 
     Hardware_TestBot robot   = new Hardware_TestBot();

@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,11 +12,14 @@ import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-@TeleOp(name = "After Bake Sale 18 - XXXXXX (Android Studio)", group = "")
-@Disabled
-public class AfterBakeSale18_XXXXXX extends LinearOpMode {
+@TeleOp(name = "ABS27argh Generic (Studio)", group = "")
+public class ABS_27_Argh_Generic extends LinearOpMode {
 
+    private Servo servo0;
+    private Servo servo1;
+    private Servo servo2;
     private DigitalChannel digital0;
     private DigitalChannel digital1;
     private BNO055IMU imu;
@@ -29,13 +29,13 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
     private DcMotor motor3;
     private DcMotor motor0B;
     private DcMotor motor1B;
-    private Servo servo0;
     private DigitalChannel digital3;
     private DigitalChannel digital2;
     private DcMotor motor2B;
     private DcMotor motor3B;
 
     double Limit_DriveSpeed;
+    double Limit_DriveSpeed_Default;
     double Limit_MastSpeed;
     double Limit_JibSpeed;
     int Limit_HomingTime;
@@ -58,6 +58,10 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
     int Pos_Jib_Max;
     int Pos_Jib_Min;
     int Pos_Jib_Current;
+    int Pos_Jib_Protect;// = 350;
+    int Pos_Jib_Capture;// = 1000;
+    int Pos_Jib_Place;// = 1675;
+    int Pos_Mast_BridgeSafe;// = 300;
     double Power_Jib;
 
     double Power_M0;
@@ -77,10 +81,17 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
     int Flag_Jib_IsHolding;
     int Flag_CancelAction;
     int Flag_Crane_IsHomed;
+    int Flag_MoverToggle;
     int State_Homing;
 
-    double Position_Servo0;
+    double Position_GrabberServo;
     double Speed_Servo0;
+    double Pos_FoundationMover_Up;
+    double Pos_FoundationMover_Down;
+    double Pos_Grabber_Open;
+    double Pos_Grabber_Closed;
+    double Pos_Grabber_SafeToHome;// = 0.6;
+    double Pos_Grabber_Protect;// = 0.8;
 
     ElapsedTime Timer_Elapsed;
     ElapsedTime Timer_Loop;
@@ -114,6 +125,9 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
+        servo0 = hardwareMap.servo.get("servo0");
+        servo1 = hardwareMap.servo.get("servo1");
+        servo2 = hardwareMap.servo.get("servo2");
         digital0 = hardwareMap.digitalChannel.get("digital0");
         digital1 = hardwareMap.digitalChannel.get("digital1");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -123,7 +137,6 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
         motor3 = hardwareMap.dcMotor.get("motor3");
         motor0B = hardwareMap.dcMotor.get("motor0B");
         motor1B = hardwareMap.dcMotor.get("motor1B");
-        servo0 = hardwareMap.servo.get("servo0");
         digital3 = hardwareMap.digitalChannel.get("digital3");
         digital2 = hardwareMap.digitalChannel.get("digital2");
         motor2B = hardwareMap.dcMotor.get("motor2B");
@@ -133,6 +146,9 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
         if (opModeIsActive()) {
             // Put run blocks here.
             // disable homing function until limit switches added
+            servo0.setDirection(Servo.Direction.FORWARD);
+            servo1.setDirection(Servo.Direction.FORWARD);
+            servo2.setDirection(Servo.Direction.REVERSE);
             while (opModeIsActive()) {
                 BulkTelemetry1();
                 InputModifiers();
@@ -141,7 +157,7 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     SetCraneLimits();
                     ControlMast();
                     ControlJib();
-                    ControlServo();
+                    ControlServos();
                 } else {
                     HomeCrane();
                 }
@@ -185,10 +201,11 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
      */
     private void SetVariablesAndConstants() {
         Limit_DriveSpeed = 1;
+        Limit_DriveSpeed_Default = 0.35;
         Limit_MastSpeed = 1;
         Limit_JibSpeed = 0.5;
         Limit_HomingTime = 15;
-        Position_Servo0 = 0.5;
+        Position_GrabberServo = 0.5;
         Speed_Servo0 = 0.05;
         Timer_Elapsed = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -201,8 +218,16 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
         Flag_Jib_IsHolding = 0;
         Flag_CancelAction = 0;
         Flag_Crane_IsHomed = 0;
+        Flag_MoverToggle = 0;
         State_Homing = 0;
         SetCraneConstants();
+        Pos_FoundationMover_Up = 0;
+        Pos_FoundationMover_Down = 1;
+        Pos_Grabber_Open = 0.6;
+        Pos_Grabber_Closed = 0.4;
+        // New12192019
+        Pos_Grabber_SafeToHome = 0.6;
+        Pos_Grabber_Protect = 0.8;
     }
 
     /**
@@ -262,23 +287,24 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                 Timer_Homing.reset();
             }
             // Do this every loop
-            if (1 == 1) {
-                // Read the motor encoders only ONCE PER LOOP
-                // (except for the holds, which need freshest info)
-                Pos_Mast_Current = motor0B.getCurrentPosition();
-                Pos_Jib_Current = motor1B.getCurrentPosition();
-                // How much time has elapsed in homing?
-                Time_Homing = Timer_Homing.seconds();
-                message = "Homing";
-                // Need to cancel?
-                if (gamepad2.b || Time_Homing > Limit_HomingTime) {
-                    State_Homing = 9999;
-                }
+
+            // Read the motor encoders only ONCE PER LOOP
+            // (except for the holds, which need freshest info)
+            Pos_Mast_Current = motor0B.getCurrentPosition();
+            Pos_Jib_Current = motor1B.getCurrentPosition();
+            // How much time has elapsed in homing?
+            Time_Homing = Timer_Homing.seconds();
+            message = "Homing";
+            // Need to cancel?
+            if (gamepad2.b || Time_Homing > Limit_HomingTime) {
+                State_Homing = 9999;
             }
+
             // Initialize
             if (State_Homing == 1) {
                 // Put the grabber servo in a safe position
-                servo0.setPosition(0.6);
+                servo0.setPosition(Pos_Grabber_SafeToHome);
+                Position_GrabberServo = Pos_Grabber_Protect;
                 // Make sure the motors are stopped
                 motor0B.setPower(0);
                 motor1B.setPower(0);
@@ -291,7 +317,7 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                 // (set up for next state)
                 // Move mast a minimum safe distance up
                 motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                motor0B.setPower(1);
+                motor0B.setPower(0.5);
             }
             // Move mast a minimum safe distance up
             if (State_Homing == 2) {
@@ -304,11 +330,13 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     motor0B.setPower(0.05);
                     HomingDebugDelay();
                     State_Homing += 1;
+                    Flag_Grabber_IsParked = 0;  // !!!!!!!!!!!!!!!!!!!!!!!!
                     // (set up for next state)
                     // Home the jib - Rough
                     motor1B.setPower(0);
                     motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    motor1B.setPower(-1);
+                    motor1B.setPower(-0.5);
+                    servo0.setPosition(Pos_Grabber_Closed);
                 }
             }
             // Home the jib - Rough
@@ -321,30 +349,16 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     HomingDebugDelay();
                     State_Homing += 1;
                     // (set up for next state)
-                    // ...and extend for take two
+                    // ...and extend until limit false
                     motor1B.setPower(0);
                     motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    motor1B.setPower(1);
+                    motor1B.setPower(0.1);
                 }
             }
-            // ...and extend for take two
+            // ...and extend until limit false
             if (State_Homing == 4) {
                 message = "Homing Jib ";
-                if (Pos_Jib_Current > 200) {
-                    motor1B.setPower(0);
-                    HomingDebugDelay();
-                    State_Homing += 1;
-                    // (set up for next state)
-                    // Home the jib - Precise
-                    motor1B.setPower(0);
-                    motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    motor1B.setPower(-0.25);
-                }
-            }
-            // Home the jib - Precise
-            if (State_Homing == 5) {
-                message = "Homing Jib - Precise";
-                if (digital3.getState() || Pos_Jib_Current < -9999) {
+                if (!digital3.getState() || Pos_Jib_Current > 400) {
                     motor1B.setPower(0);
                     motor1B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     Pos_Jib_Current = 0;
@@ -358,9 +372,9 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                 }
             }
             // Extend jib to a minimum safe distance
-            if (State_Homing == 6) {
+            if (State_Homing == 5) {
                 message = "Extending Jib";
-                if (Pos_Jib_Current >= Pos_Jib_Low_MastSafe) {
+                if (Pos_Jib_Current >= Pos_Jib_Protect) {
                     motor1B.setPower(0);
                     // ...and hold it there
                     motor1B.setTargetPosition(motor1B.getCurrentPosition());
@@ -373,10 +387,11 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     motor0B.setPower(0);
                     motor0B.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     motor0B.setPower(-0.5);
+                    servo0.setPosition(Pos_Grabber_Open);
                 }
             }
             // Home the Mast - Rough
-            if (State_Homing == 7) {
+            if (State_Homing == 6) {
                 message = "Homing Mast - Rough";
                 if (digital2.getState() || Pos_Mast_Current < -9999) {
                     motor0B.setPower(0);
@@ -392,7 +407,7 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                 }
             }
             // ...and extend for take two
-            if (State_Homing == 8) {
+            if (State_Homing == 7) {
                 message = "Homing Mast";
                 if (Pos_Mast_Current > 250) {
                     motor0B.setPower(0);
@@ -405,7 +420,7 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                 }
             }
             // Home the mast - Precise
-            if (State_Homing == 9) {
+            if (State_Homing == 8) {
                 message = "Homing Mast - Precise";
                 if (digital2.getState() || Pos_Mast_Current < -9999) {
                     motor0B.setPower(0);
@@ -413,30 +428,18 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     Pos_Mast_Current = 0;
                     HomingDebugDelay();
                     State_Homing += 1;
-                    // (set up for next state)
-                    // Extend mast up to jib safe position
+                    // Hold at 0 position
                     motor0B.setPower(0);
-                    motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    motor0B.setPower(1);
-                }
-            }
-            // Extend mast up to jib safe position
-            if (State_Homing == 10) {
-                message = "Extending Mast";
-                if (Pos_Mast_Current > Pos_Mast_Low_JibSafe) {
-                    motor0B.setPower(0);
-                    // ...and hold it there
-                    motor0B.setTargetPosition(motor0B.getCurrentPosition());
+                    motor0B.setTargetPosition(0);
                     motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     motor0B.setPower(0.05);
-                    HomingDebugDelay();
-                    State_Homing += 1;
                 }
             }
             // All done!
-            if (State_Homing == 11) {
+            if (State_Homing == 9) {
                 Flag_Crane_IsHomed = 1;
                 State_Homing = 0;
+                servo0.setPosition(Pos_Grabber_Protect);
             }
             // Was homing cancelled?
             if (State_Homing == 9999) {
@@ -449,18 +452,17 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                 motor1B.setTargetPosition(motor1B.getCurrentPosition());
                 motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 motor1B.setPower(0.05);
+                Position_GrabberServo = Pos_Grabber_Open;
                 HomingDebugDelay();
                 State_Homing = 0;
             }
             // Do this every loop
-            if (1 == 1) {
-                telemetry.addData("Status", "~~~~~  HOMING IN PROGRESS ~~~~~");
-                telemetry.addData("Message", message);
-                telemetry.addData("Homing State #", State_Homing);
-                telemetry.addData("Mast Encoder", Pos_Mast_Current);
-                telemetry.addData("Jib Encoder", Pos_Jib_Current);
-                telemetry.addData("Homing Time (seconds)", JavaUtil.formatNumber(Time_Homing, 0));
-            }
+            telemetry.addData("Status", "~~~~~  HOMING IN PROGRESS ~~~~~");
+            telemetry.addData("Message", message);
+            telemetry.addData("Homing State #", State_Homing);
+            telemetry.addData("Mast Encoder", Pos_Mast_Current);
+            telemetry.addData("Jib Encoder", Pos_Jib_Current);
+            telemetry.addData("Homing Time (seconds)", JavaUtil.formatNumber(Time_Homing, 0));
         }
     }
 
@@ -478,37 +480,110 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
             telemetry.addData("Encoders A", motor0.getCurrentPosition() + "   " + motor1.getCurrentPosition() + "   " + motor2.getCurrentPosition() + "   " + motor3.getCurrentPosition());
             telemetry.addData("Encoders B", Pos_Mast_Current + "   " + Pos_Jib_Current + "   " + motor2B.getCurrentPosition() + "   " + motor3B.getCurrentPosition());
         }
-        telemetry.addData("Servo", JavaUtil.formatNumber(Position_Servo0, 2));
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void SetCraneConstants() {
-        Pos_Mast_Max_Global = 5975;
-        Pos_Mast_Min_Global = 0;
-        Pos_Jib_Max_Global = 3950;
-        Pos_Jib_Min_Global = 0;
-        Pos_Mast_Low_JibSafe = 1300;
-        Pos_Jib_Low_MastSafe = 1500;
-        Pos_Mast_WiresSafe = 2400;
-        Pos_Jib_WiresSafe = 1150;
+        telemetry.addData("Servo", JavaUtil.formatNumber(Position_GrabberServo, 2));
     }
 
     /**
      * Describe this function...
      */
     private void InputModifiers() {
-        if (gamepad1.y) {
-            Limit_DriveSpeed = 0.5;
-        } else {
-            Limit_DriveSpeed = 1;
-        }
+        Drive_Speed_Limiters();
         if (State_Homing == 0) {
+            // Only allow homing if not already homing
             if (gamepad2.left_bumper && gamepad2.right_bumper) {
                 State_Homing = 1;
             }
         }
+        Control_Y_Drive = -Math.pow(gamepad1.left_stick_y, 1);
+        Control_X_Strafe = Math.pow(gamepad1.left_stick_x, 1);
+        Control_R_Rotate = Math.pow(gamepad1.right_stick_x, 1);
+        telemetry.addData("DRIVE STRAFE ROTATE", JavaUtil.formatNumber(Control_Y_Drive, 2) + "   " + JavaUtil.formatNumber(Control_X_Strafe, 2) + "   " + JavaUtil.formatNumber(Control_R_Rotate, 2));
+        // Avoid backing up while grabber on floor
+        if (Control_Y_Drive < -0.1 && Position_GrabberServo == Pos_Grabber_Closed && Math.abs(Pos_Mast_Current) < 100) {
+            Control_Y_Drive = -0.1;
+        }
+        // Raise/Lower grabber to block heights
+        if (Flag_Crane_IsHomed != 0) {
+            if (gamepad2.dpad_up) {
+                // 4 high=5000, 5 high=6300 (just outside limits?)
+                for (int i = -200; i <= 6300; i += 1300) {
+                    if (Pos_Mast_Current < i - 50) {
+                        motor0B.setPower(0);
+                        motor0B.setTargetPosition(Math.min(Math.max(i, 0), Pos_Mast_Max_Global));
+                        motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        motor0B.setPower(1);
+                        break;
+                    }
+                }
+            } else if (gamepad2.dpad_down && Pos_Jib_Current > Pos_Jib_Low_MastSafe) {
+                for (int i = 6300; i >= -200; i -= 1300) {
+                    if (Pos_Mast_Current > i + 50) {
+                        motor0B.setPower(0);
+                        motor0B.setTargetPosition(Math.min(Math.max(i, 0), 5000));
+                        motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        motor0B.setPower(0.5);
+                        break;
+                    }
+                }
+            }
+            if (gamepad2.dpad_left && Position_GrabberServo != Pos_Grabber_Closed) {
+                // Protect grabber for foundation moving
+                Position_GrabberServo = Pos_Grabber_Protect;
+                // Safe the Jib
+                motor1B.setPower(0);
+                motor1B.setTargetPosition(Pos_Jib_Protect);
+                motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motor1B.setPower(0.5);
+                // Lower the Mast
+                motor0B.setPower(0);
+                motor0B.setTargetPosition(Pos_Mast_Min_Global);
+                motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motor0B.setPower(0.5);
+            }
+            if (gamepad2.x && Position_GrabberServo != Pos_Grabber_Closed) {
+                // Get ready to grab
+                // Lower the Mast
+                motor0B.setPower(0);
+                motor0B.setTargetPosition(Pos_Mast_Min_Global);
+                motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motor0B.setPower(0.5);
+                // Position the Jib
+                motor1B.setPower(0);
+                motor1B.setTargetPosition(Pos_Jib_Capture);
+                motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motor1B.setPower(0.5);
+                Position_GrabberServo = Pos_Grabber_Open;
+            }
+            if (gamepad2.y && Position_GrabberServo != Pos_Grabber_Closed) {
+                CompoundGrab();
+            }
+            if (gamepad2.dpad_right) {
+                // Position Jib for placing stone
+                motor1B.setPower(0);
+                motor1B.setTargetPosition(Pos_Jib_Place);
+                motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motor1B.setPower(0.5);
+            }
+        }
+    }
+
+    /**
+     * Describe this function...
+     */
+    private void SetCraneConstants() {
+        Pos_Mast_Min_Global = 0;
+        Pos_Jib_Max_Global = 3900;
+        Pos_Jib_Min_Global = 0;
+        Pos_Mast_WiresSafe = 2400;
+        Pos_Jib_WiresSafe = 1150;
+        // New 12192019
+        Pos_Mast_Low_JibSafe = 200;
+        Pos_Jib_Low_MastSafe = 0;
+        Pos_Mast_Max_Global = 6200;
+        Pos_Jib_Protect = 350;
+        Pos_Jib_Capture = 1000;
+        Pos_Jib_Place = 1675;
+        Pos_Mast_BridgeSafe = 300;
     }
 
     /**
@@ -530,6 +605,180 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
         Time_Loop = Timer_Loop.milliseconds();
         Timer_Loop.reset();
         return Time_Loop;
+    }
+
+    /**
+     * Describe this function...
+     */
+    private void ControlDrivetrain() {
+        Power_M0 = Control_Y_Drive + Control_X_Strafe + Control_R_Rotate;
+        Power_M1 = (Control_Y_Drive - Control_X_Strafe) - Control_R_Rotate;
+        Power_M2 = (Control_Y_Drive - Control_X_Strafe) + Control_R_Rotate;
+        Power_M3 = (Control_Y_Drive + Control_X_Strafe) - Control_R_Rotate;
+        telemetry.addData("M0 M1 M2 M3 (raw)", JavaUtil.formatNumber(Power_M0, 2) + "   " + JavaUtil.formatNumber(Power_M1, 2) + "   " + JavaUtil.formatNumber(Power_M2, 2) + "   " + JavaUtil.formatNumber(Power_M3, 2));
+        Power_Drive_Max = JavaUtil.maxOfList(JavaUtil.createListWith(Math.abs(Power_M0), Math.abs(Power_M1), Math.abs(Power_M2), Math.abs(Power_M3), 1));
+        Power_M0 = (Power_M0 / Power_Drive_Max) * Limit_DriveSpeed;
+        Power_M1 = (Power_M1 / Power_Drive_Max) * Limit_DriveSpeed;
+        Power_M2 = (Power_M2 / Power_Drive_Max) * Limit_DriveSpeed;
+        Power_M3 = (Power_M3 / Power_Drive_Max) * Limit_DriveSpeed;
+        telemetry.addData("M0 M1 M2 M3 (mod)", JavaUtil.formatNumber(Power_M0, 2) + "   " + JavaUtil.formatNumber(Power_M1, 2) + "   " + JavaUtil.formatNumber(Power_M2, 2) + "   " + JavaUtil.formatNumber(Power_M3, 2));
+
+        motor0.setPower(Power_M0);
+        motor1.setPower(Power_M1);
+        motor2.setPower(Power_M2);
+        motor3.setPower(Power_M3);
+
+    }
+
+    /**
+     * Describe this function...
+     */
+    private void ControlServos() {
+        if (State_Homing == 0) {
+            // Only allow control of grabber while
+            // NOT homing
+            // Use gamepad A and B to open close servo
+            if (gamepad2.a) {
+                Position_GrabberServo = Pos_Grabber_Closed;
+            }
+            if (gamepad2.b) {
+                Position_GrabberServo = Pos_Grabber_Open;
+            }
+            // Keep Servo position in valid range
+            Position_GrabberServo = Math.min(Math.max(Position_GrabberServo, 0), 1);
+            servo0.setPosition(Position_GrabberServo);
+        }
+        if (State_Homing == 0) {
+            // Only allow control of foundation mover
+            // when NOT homing
+            // Use gamepad 2 UP to activate
+            // Use flag variable to minimize time
+            // by not always sending servo position
+            if (gamepad2.back) {
+                servo1.setPosition(Pos_FoundationMover_Down);
+                servo2.setPosition(Pos_FoundationMover_Down);
+            } else {
+                servo1.setPosition(Pos_FoundationMover_Up);
+                servo2.setPosition(Pos_FoundationMover_Up);
+            }
+        }
+    }
+
+    /**
+     * Describe this function...
+     */
+    private void Drive_Speed_Limiters() {
+        if (gamepad1.left_trigger > 0) {
+            Limit_DriveSpeed = Limit_DriveSpeed_Default - gamepad1.left_trigger * (Limit_DriveSpeed_Default - 0.1);
+        } else if (gamepad1.right_trigger > 0) {
+            Limit_DriveSpeed = Limit_DriveSpeed_Default + gamepad1.right_trigger * (1 - Limit_DriveSpeed_Default);
+        } else {
+            Limit_DriveSpeed = Limit_DriveSpeed_Default;
+        }
+        // Limit drive speed when homing
+        if (State_Homing != 0) {
+            Limit_DriveSpeed = Math.min(Math.max(Limit_DriveSpeed, 0), 0.2);
+        }
+        // Limit speed when crane up or out
+        if (Pos_Jib_Current > 2500 || Pos_Mast_Current > 1500) {
+            Limit_DriveSpeed = Math.min(Math.max(Limit_DriveSpeed, 0), 0.2);
+        }
+        telemetry.addData("Drive Speed Limit", JavaUtil.formatNumber(Limit_DriveSpeed, 2));
+    }
+
+    /**
+     * Describe this function...
+     */
+    private void SetCraneLimits() {
+        // Start by using the global maxima
+        Pos_Mast_Max = Pos_Mast_Max_Global;
+        Pos_Mast_Min = Pos_Mast_Min_Global;
+        Pos_Jib_Max = Pos_Jib_Max_Global;
+        Pos_Jib_Min = Pos_Jib_Protect;
+        // Read the encoder positions
+        // Use this variable elsewhere to avoid re-reading!
+        Pos_Mast_Current = motor0B.getCurrentPosition();
+        Pos_Jib_Current = motor1B.getCurrentPosition();
+        // If grabber is closed (has a block)
+        if (Position_GrabberServo == Pos_Grabber_Closed) {
+            Pos_Jib_Min = Pos_Jib_Capture;
+        }
+        // If mast has raised enough, flag grabber deployed
+        // Mast is low, grabber not deployed: jib can't move
+        // Mast is low, jib is extended: jib can't retract
+        // Mast is high: jib can't retract (avoid wire pinch)
+        // Jib is retracted too far, limit mast movement up
+        // Jib is retracted too far, limit mast movement down
+        // Limit jib retraction when grabber engaged
+    }
+
+    /**
+     * Describe this function...
+     */
+
+/*    private void Old_Boneyard_BumperOverrides() {
+        if (Flag_RightBumper_IsPressed >= 5) {
+            motor1B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor1B.setTargetPosition(0);
+            motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor1B.setPower(0.05);
+        }
+        if (Flag_RightBumper_IsPressed >= 5) {
+            motor1B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        if (Flag_LeftBumper_IsPressed >= 5) {
+            motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor0B.setTargetPosition(0);
+            motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor0B.setPower(0.05);
+        }
+        if (Flag_LeftBumper_IsPressed >= 5) {
+            motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }*/
+
+    /**
+     * Describe this function...
+     */
+    private void CompoundGrab() {
+        // Convert into a state machine?
+        // Make sure mast is all the way down
+        // and jib near collect position
+        // Otherwise do nothing
+        if (Math.abs(Pos_Mast_Current) < 50 && Pos_Jib_Current > Pos_Jib_Capture - 50 && Pos_Jib_Current - Pos_Jib_Capture < 500) {
+            // Drive the Jib
+            motor1B.setPower(0);
+            motor1B.setTargetPosition(Pos_Jib_Current + 1000);
+            motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor1B.setPower(0.5);
+            while (motor1B.isBusy()) {
+                if (gamepad2.b) {
+                    break;
+                }
+            }
+            // Activate the Servo
+            Position_GrabberServo = Pos_Grabber_Closed;
+            servo0.setPosition(Position_GrabberServo);
+            sleep(300);
+            // Raise the Mast a little
+            motor0B.setPower(0);
+            motor0B.setTargetPosition(Pos_Mast_BridgeSafe);
+            motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor0B.setPower(0.3);
+            while (motor0B.isBusy()) {
+                if (gamepad2.b) {
+                    break;
+                }
+            }
+            // Return jib to Collect position
+            motor1B.setPower(0);
+            motor1B.setTargetPosition(Pos_Jib_Place);
+            motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor1B.setPower(0.5);
+            // (don't wait now)
+        }
     }
 
     /**
@@ -586,30 +835,15 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     Power_Jib = Power_Jib * ((Pos_Jib_Current - Pos_Jib_Min) / (2000 * Limit_JibSpeed));
                 }
             }
+            // slow down near upper limit
+            if (!gamepad2.right_bumper) {
+                if (Pos_Jib_Max - Pos_Jib_Current <= 2000 * Limit_JibSpeed && Power_Jib > 0) {
+                    Power_Jib = Power_Jib * ((Pos_Jib_Max - Pos_Jib_Current) / (2000 * Limit_JibSpeed));
+                }
+            }
             telemetry.addData("Jib Power (constrained)", Double.parseDouble(JavaUtil.formatNumber(Power_Jib, 2)));
             motor1B.setPower(Power_Jib);
         }
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void ControlDrivetrain() {
-        Control_Y_Drive = -Math.pow(gamepad1.left_stick_y, 1);
-        Control_X_Strafe = Math.pow(gamepad1.left_stick_x, 1);
-        Control_R_Rotate = Math.pow(gamepad1.right_stick_x, 1);
-        telemetry.addData("DRIVE STRAFE ROTATE", JavaUtil.formatNumber(Control_Y_Drive, 2) + "   " + JavaUtil.formatNumber(Control_X_Strafe, 2) + "   " + JavaUtil.formatNumber(Control_R_Rotate, 2));
-        Power_M0 = Control_Y_Drive + Control_X_Strafe + Control_R_Rotate;
-        Power_M1 = (Control_Y_Drive - Control_X_Strafe) - Control_R_Rotate;
-        Power_M2 = (Control_Y_Drive - Control_X_Strafe) + Control_R_Rotate;
-        Power_M3 = (Control_Y_Drive + Control_X_Strafe) - Control_R_Rotate;
-        telemetry.addData("M0 M1 M2 M3 (raw)", JavaUtil.formatNumber(Power_M0, 2) + "   " + JavaUtil.formatNumber(Power_M1, 2) + "   " + JavaUtil.formatNumber(Power_M2, 2) + "   " + JavaUtil.formatNumber(Power_M3, 2));
-        Power_Drive_Max = JavaUtil.maxOfList(JavaUtil.createListWith(Math.abs(Power_M0), Math.abs(Power_M1), Math.abs(Power_M2), Math.abs(Power_M3), 1));
-        Power_M0 = (Power_M0 / Power_Drive_Max) * Limit_DriveSpeed;
-        Power_M1 = (Power_M1 / Power_Drive_Max) * Limit_DriveSpeed;
-        Power_M2 = (Power_M2 / Power_Drive_Max) * Limit_DriveSpeed;
-        Power_M3 = (Power_M3 / Power_Drive_Max) * Limit_DriveSpeed;
-        telemetry.addData("M0 M1 M2 M3 (mod)", JavaUtil.formatNumber(Power_M0, 2) + "   " + JavaUtil.formatNumber(Power_M1, 2) + "   " + JavaUtil.formatNumber(Power_M2, 2) + "   " + JavaUtil.formatNumber(Power_M3, 2));
     }
 
     /**
@@ -666,69 +900,14 @@ public class AfterBakeSale18_XXXXXX extends LinearOpMode {
                     Power_Mast = Power_Mast * ((Pos_Mast_Current - Pos_Mast_Min) / (2000 * Limit_MastSpeed));
                 }
             }
+            // slow down near upper limit
+            if (!gamepad2.left_bumper) {
+                if (Pos_Mast_Max - Pos_Mast_Current <= 2000 * Limit_MastSpeed && Power_Mast > 0) {
+                    Power_Mast = Power_Mast * ((Pos_Mast_Max - Pos_Mast_Current) / (2000 * Limit_MastSpeed));
+                }
+            }
             telemetry.addData("Mast Power (constrained)", Double.parseDouble(JavaUtil.formatNumber(Power_Mast, 2)));
             motor0B.setPower(Power_Mast);
         }
     }
-
-    /**
-     * Describe this function...
-     */
-    private void ControlServo() {
-        // Use gamepad A and B to open close servo
-        if (gamepad1.a) {
-            Position_Servo0 += Speed_Servo0;
-        }
-        if (gamepad1.b) {
-            Position_Servo0 += -Speed_Servo0;
-        }
-        // Keep Servo position in valid range
-        Position_Servo0 = Math.min(Math.max(Position_Servo0, 0), 1);
-        servo0.setPosition(Position_Servo0);
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void SetCraneLimits() {
-        // Start by using the global maxima
-        Pos_Mast_Max = Pos_Mast_Max_Global;
-        Pos_Mast_Min = Pos_Mast_Min_Global;
-        Pos_Jib_Max = Pos_Jib_Max_Global;
-        Pos_Jib_Min = Pos_Jib_Min_Global;
-        // Read the encoder positions
-        // Use this variable elsewhere to avoid re-reading!
-        Pos_Mast_Current = motor0B.getCurrentPosition();
-        Pos_Jib_Current = motor1B.getCurrentPosition();
-        // If mast has raised enough, flag grabber deployed
-        if (Pos_Mast_Current > Pos_Mast_Low_JibSafe) {
-            Flag_Grabber_IsParked = 0;
-        }
-        // Mast is low, grabber not deployed: jib can't move
-        if (Pos_Mast_Current < Pos_Mast_Low_JibSafe && Flag_Grabber_IsParked == 1) {
-            // (impossible to satisfy)
-            Pos_Jib_Max = -9999;
-            Pos_Jib_Min = 9999;
-        }
-        // Mast is low, jib is extended: jib can't retract
-        if (Pos_Mast_Current < Pos_Mast_Low_JibSafe && Pos_Jib_Current > Pos_Jib_Low_MastSafe - 200) {
-            Pos_Jib_Min = Pos_Jib_Low_MastSafe;
-        }
-        // Mast is high: jib can't retract (avoid wire pinch)
-        if (Pos_Mast_Current > Pos_Mast_WiresSafe) {
-            Pos_Jib_Min = Pos_Jib_WiresSafe;
-        }
-        // Jib is retracted too far, limit mast movement up
-        if (Pos_Jib_Current < Pos_Jib_WiresSafe) {
-            Pos_Mast_Max = Pos_Mast_WiresSafe;
-        }
-        // Jib is retracted too far, limit mast movement down
-        if (Pos_Jib_Current < Pos_Jib_Low_MastSafe && Flag_Grabber_IsParked == 0) {
-            Pos_Mast_Min = Pos_Mast_Low_JibSafe;
-        }
-    }
-}
-class MyClass {
-    final int x = 10;
-
 }

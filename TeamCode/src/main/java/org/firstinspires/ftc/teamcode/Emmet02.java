@@ -7,10 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
-@TeleOp(name = "Emmet01 (Generic)", group = "")
-public class Emmet01 extends LinearOpMode {
+@TeleOp(name = "Emmet02 (Dog)", group = "")
+public class Emmet02 extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
@@ -151,11 +152,13 @@ public class Emmet01 extends LinearOpMode {
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLeftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorRightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorMast.setDirection(DcMotorSimple.Direction.FORWARD);
+        //motorMast.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorMast.setDirection(DcMotorSimple.Direction.REVERSE);
         motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorMast.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorJib.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motorJib.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorJib.setDirection(DcMotorSimple.Direction.FORWARD);
         motorJib.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorJib.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
