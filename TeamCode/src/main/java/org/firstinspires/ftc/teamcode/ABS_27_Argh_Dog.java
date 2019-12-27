@@ -8,14 +8,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-@TeleOp(name = "ABS27argh (Studio)", group = "")
-public class ABS_27_Argh extends LinearOpMode {
+@TeleOp(name = "ABS27argh Dog (Studio)", group = "")
+public class ABS_27_Argh_Dog extends LinearOpMode {
 
     private Servo servo0;
     private Servo servo1;
@@ -266,11 +267,13 @@ public class ABS_27_Argh extends LinearOpMode {
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor0B.setDirection(DcMotorSimple.Direction.FORWARD);
+        //motor0B.setDirection(DcMotorSimple.Direction.FORWARD);
+        motor0B.setDirection(DcMotorSimple.Direction.REVERSE);
         motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor0B.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor1B.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motor1B.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor1B.setDirection(DcMotorSimple.Direction.FORWARD);
         motor1B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor1B.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
