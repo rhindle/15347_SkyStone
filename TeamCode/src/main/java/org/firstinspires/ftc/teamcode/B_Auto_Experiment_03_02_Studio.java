@@ -173,6 +173,7 @@ public class B_Auto_Experiment_03_02_Studio extends LinearOpMode {
             goStrafe(0.25, 3 * directionModifier, 0 * directionModifier, 1);
         }
         vuforiaSkyStone.deactivate();
+        //vuforiaSkyStone.close();  // this was added in the example, but not here for some reason; test it?
         stowWhiskers();
         // Drive closer to stones
         goDrive(0.5, 10, 0 * directionModifier, 1);
