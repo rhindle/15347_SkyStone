@@ -1,9 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -17,9 +16,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaBase;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
-@TeleOp(name = "B_Auto_Experiment_03_02 (BTJ-Studio)", group = "")
-@Disabled
-public class B_Auto_Experiment_03_02_Studio extends LinearOpMode {
+@Autonomous(name = "B_Auto_Experiment_03_03 (BTJ-Studio)", group = "")
+public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
 
     private VuforiaSkyStone vuforiaSkyStone;
     private Servo servo0;
@@ -112,83 +110,60 @@ public class B_Auto_Experiment_03_02_Studio extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void AutoThing2() {
-        flagWhiskers = 0;
-        stowWhiskers();
-        // Drive toward foundation
-        goDrive(0.5, 24, 0 * directionModifier, 1);
-        // Strafe to middle of foundation
-        goStrafe(0.25, 12 * directionModifier, 0 * directionModifier, 1);
-        // Drive into foundation and grab it
-        flagWhiskers = 6;
-        goDrive(0.15, 12, 0 * directionModifier, 1);
-        // Back up a little at a shallow angle
-        goDrive(0.5, -12, 13 * directionModifier, 1);
-        // Back up more at larger angle
-        goDrive(0.5, -24, 30 * directionModifier, 1);
-        // Push foundation square to side
-        goDrive(0.5, 18, 90 * directionModifier, 1);
-        // Open whiskers and wait for them to clear
-        stowWhiskers();
-        sleep(500);
-        // Back away from foundation
-        goDrive(0.5, -12, 90 * directionModifier, 1);
-        // Strafe into parking position
-        // 1 run into wall
-        goStrafe(0.25, 24 * directionModifier, 90 * directionModifier, 1);
-        // 2 move to far position if necessary
-        if (parkPosition == 2) {
-            goStrafe(0.25, -26 * directionModifier, 90 * directionModifier, 1);
-        }
-        // Back under Skybridge
-        goDrive(0.5, -30, 90 * directionModifier, 1);
-    }
-
-    /**
-     * Describe this function...
-     */
     private void AutoThing() {
         flagWhiskers = 0;
         flagGrabber = 0;
         stowWhiskers();
         lowerRightWhisker();
         // Drive toward stones
-        goDrive(0.3, 18, 0 * directionModifier, 1);
+        goDrive(0.15, 18, 0 * directionModifier, 1);
+        sleep(500);
+        // turn toward left stone if nothing is detected
         if (!isTargetVisible("Stone Target")) {
             setHeading(30, 0.5, 3, 1);
             sleep(500);
-            //CameraDevice.getInstance().setFlashTorchMode(true);
             setHeading(0, 0.5, 1, 4);
         }
-        ////CameraDevice.getInstance().setFlashTorchMode(false);
         lookForSkystones();
         telemetry.addData("Skystone Pattern", skystonePattern);
         telemetry.update();
         if (skystonePattern == 1) {
             // skystone closest to bridge
-            goStrafe(0.25, 10 * directionModifier, 0 * directionModifier, 1);
+            goStrafe(0.25, 12 * directionModifier, 0 * directionModifier, 1);
         } else if (skystonePattern == 3) {
             // skystone 3rd from bridge
-            goStrafe(0.25, -5 * directionModifier, 0 * directionModifier, 1);
+            goStrafe(0.25, -3 * directionModifier, 0 * directionModifier, 1);
         } else {
             // skystone middley
-            goStrafe(0.25, 3 * directionModifier, 0 * directionModifier, 1);
+            goStrafe(0.25, 5 * directionModifier, 0 * directionModifier, 1);
         }
         vuforiaSkyStone.deactivate();
-        //vuforiaSkyStone.close();  // this was added in the example, but not here for some reason; test it?
         stowWhiskers();
         // Drive closer to stones
         goDrive(0.5, 10, 0 * directionModifier, 1);
+        // drive slowly to stone
         deployGrabber();
         flagGrabber = 8;
         goDrive(0.1, 10, 0 * directionModifier, 1);
         liftGrabber();
         sleep(500);
+        // back up from stones
         goDrive(0.5, -12, 0 * directionModifier, 1);
-        goDrive(0.5, 24, 90 * directionModifier, 1);
+        // drive beneath the bridge
+        if (skystonePattern == 1) {
+            // skystone closest to bridge
+            goDrive(0.5, 36, 90 * directionModifier, 1);
+        } else if (skystonePattern == 3) {
+            // skystone 3rd from bridge
+            goDrive(0.5, 36 + 16, 90 * directionModifier, 1);
+        } else {
+            // skystone middley
+            goDrive(0.5, 36 + 8, 90 * directionModifier, 1);
+        }
         openGrabber();
         sleep(500);
-        goDrive(0.5, -2, 90 * directionModifier, 1);
+        // back up and park
+        goDrive(0.5, -12, 90 * directionModifier, 1);
     }
 
     /**
@@ -306,7 +281,6 @@ public class B_Auto_Experiment_03_02_Studio extends LinearOpMode {
         motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motor0B.setPower(0.3);
     }
-
 
     /**
      * Describe this function...
