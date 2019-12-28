@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,8 +11,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
-@TeleOp(name = "Emmet02 (Dog)", group = "")
-public class Emmet02 extends LinearOpMode {
+@TeleOp(name = "Emmet01 (Dog)", group = "")
+@Disabled
+public class Emmet01_Dog extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
@@ -136,10 +138,14 @@ public class Emmet02 extends LinearOpMode {
     }
 
     private void initMotors() {
-        motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        motorLeftRear.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRightRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        //motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        //motorLeftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        //motorRightRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorLeftRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRightRear.setDirection(DcMotorSimple.Direction.REVERSE);
         motorLeftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorRightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorLeftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -244,7 +250,7 @@ public class Emmet02 extends LinearOpMode {
                     motorJib.setPower(0);
                     motorJib.setTargetPosition(jibPositionCurrent + 1000);
                     motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorJib.setPower(0.5);
+                    motorJib.setPower(0.7);  //0.5
                     flagJibHolding = true;
                     jibPositionHold = jibPositionCurrent + 1000;
                     while (motorJib.isBusy() && opModeIsActive()) {
@@ -259,7 +265,7 @@ public class Emmet02 extends LinearOpMode {
                     motorMast.setPower(0);
                     motorMast.setTargetPosition(mastPositionBridgeSafe);
                     motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorMast.setPower(0.3);
+                    motorMast.setPower(0.5);  //0.3
                     flagMastHolding = true;
                     mastPositionHold =  mastPositionBridgeSafe;
                     while (motorMast.isBusy() && opModeIsActive()) {
@@ -269,7 +275,7 @@ public class Emmet02 extends LinearOpMode {
                     motorJib.setPower(0);
                     motorJib.setTargetPosition(jibPositionGrab);
                     motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorJib.setPower(-0.5);
+                    motorJib.setPower(-0.7);  //-0.5
                     flagJibHolding = true;
                     jibPositionHold = jibPositionGrab;
                 }
