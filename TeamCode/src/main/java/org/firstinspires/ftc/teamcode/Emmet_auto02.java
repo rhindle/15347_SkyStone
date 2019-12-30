@@ -99,7 +99,7 @@ public class Emmet_auto02 extends LinearOpMode {
     private int autoParkingPosition;
     private int autoSkystonePattern;
     private double autoSkystoneY;
-    private boolean flagIsGobilda = true;
+    private boolean flagIsGobilda = false;
     private final double autoMinTurnSpeed = 0.06;
     private final double autoPulsesPerInch = (383.6 / (3.73 * Math.PI)) * 2;
     private final double autoStrafeFactor = 1.275;
@@ -1189,7 +1189,7 @@ public class Emmet_auto02 extends LinearOpMode {
             // skystone middley
             autoStrafe(0.25, 5 * autoDirection, 0 * autoDirection);
         }
-        vuforiaSkyStone.deactivate();
+        //vuforiaSkyStone.deactivate();
         autoStowWhiskers();
         // Drive closer to stones
         autoDrive(0.5, 10, 0 * autoDirection);
@@ -1216,5 +1216,7 @@ public class Emmet_auto02 extends LinearOpMode {
         sleep(500);
         // back up and park
         autoDrive(0.5, -12, 90 * autoDirection);
+        parkGrabber();
+        servoGrabber.setPosition(grabberPosition);
     }
 }
