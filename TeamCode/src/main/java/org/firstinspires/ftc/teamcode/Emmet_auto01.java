@@ -99,6 +99,8 @@ public class Emmet_auto01 extends LinearOpMode {
     private final double autoStrafeFactor = 1.275;
     private int autoSide;
     private final double autoDefaultTurnSpeed = 0.5;
+    private int autoFlagWhiskers;
+    private int autoFlagGrab;
 
     @Override
     public void runOpMode() {
@@ -121,7 +123,8 @@ public class Emmet_auto01 extends LinearOpMode {
         if (opModeIsActive()) {
             // Put run blocks here.
             //autoTurn(-130, 0.25, 0.5, 5);
-            autoDrive(0.25, 48, 0);
+            //autoDrive(0.25, 48, 0);
+            autoStrafe(0.25, -48, 0);
             while (opModeIsActive()) {
                 telemetry.addData("heading", getHeading());
                 telemetry.update();
@@ -903,6 +906,69 @@ public class Emmet_auto01 extends LinearOpMode {
             motorRightFront.setTargetPosition((int)(motorRightFront.getCurrentPosition() + driveDistance * autoPulsesPerInch));
             motorLeftRear.setTargetPosition((int)(motorLeftRear.getCurrentPosition() + driveDistance * autoPulsesPerInch));
             motorRightRear.setTargetPosition((int)(motorRightRear.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorRightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLeftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorRightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLeftFront.setPower(driveSpeed);
+            motorRightFront.setPower(driveSpeed);
+            motorLeftRear.setPower(driveSpeed);
+            motorRightRear.setPower(driveSpeed);
+            while (opModeIsActive() && motorLeftRear.isBusy() && motorRightRear.isBusy() && motorRightFront.isBusy() && motorLeftFront.isBusy()) {
+                currentError = getError(targetHeading);
+                speedCorrection = Math.abs(currentError / 50); //adjust as needed
+                speedCorrection = Math.min(maxCorrection, speedCorrection);
+                // correct the sign back to the error
+                speedCorrection *= Math.signum(currentError);
+                // correct the sign to match the direction
+                speedCorrection *= Math.signum(driveDistance);
+                // future work, scale if speeds end up greater than 1
+                motorLeftFront.setPower(driveSpeed - speedCorrection);
+                motorRightFront.setPower(driveSpeed + speedCorrection);
+                motorLeftRear.setPower(driveSpeed - speedCorrection);
+                motorRightRear.setPower(driveSpeed + speedCorrection);
+                telemetry.addData("current heading", getHeading());
+                telemetry.addData("target heading", targetHeading);
+                telemetry.addData("error", currentError);
+                telemetry.addData("correction", speedCorrection);
+                telemetry.update();
+                //special functions for skystone
+                if (autoFlagWhiskers != 0 && motorLeftFront.getCurrentPosition() > startPosition + autoFlagWhiskers * autoPulsesPerInch) {
+                    autoFlagWhiskers = 0;
+                    autoLowerWhiskers();
+                }
+                if (autoFlagGrab != 0 && motorLeftFront.getCurrentPosition() > startPosition + autoFlagGrab * autoPulsesPerInch) {
+                    autoFlagGrab = 0;
+                    autoCloseGrabber();
+                }
+            }
+            motorLeftFront.setPower(0);
+            motorRightFront.setPower(0);
+            motorLeftRear.setPower(0);
+            motorRightRear.setPower(0);
+        }
+    }
+
+    //strafe zee robot
+    //don't go slower than max correction, you can but it acts funny
+    private void autoStrafe(double driveSpeed, double driveDistance, double targetHeading) {
+        int startPosition;
+        double currentError;
+        double speedCorrection = 0;
+        final double maxCorrection = 0.2;
+        driveDistance *= autoStrafeFactor;
+
+        if (opModeIsActive()) {
+            autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
+            startPosition = motorLeftFront.getCurrentPosition();
+            motorLeftFront.setPower(0);
+            motorRightFront.setPower(0);
+            motorLeftRear.setPower(0);
+            motorRightRear.setPower(0);
+            motorLeftFront.setTargetPosition((int)(motorLeftFront.getCurrentPosition() - driveDistance * autoPulsesPerInch));
+            motorRightFront.setTargetPosition((int)(motorRightFront.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorLeftRear.setTargetPosition((int)(motorLeftRear.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorRightRear.setTargetPosition((int)(motorRightRear.getCurrentPosition() - driveDistance * autoPulsesPerInch));
             motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorRightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorLeftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
