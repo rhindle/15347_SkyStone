@@ -120,7 +120,8 @@ public class Emmet_auto01 extends LinearOpMode {
         initialize();
         if (opModeIsActive()) {
             // Put run blocks here.
-            autoTurn(-130, 0.25, 0.5, 5);
+            //autoTurn(-130, 0.25, 0.5, 5);
+            autoDrive(0.25, 48, 0);
             while (opModeIsActive()) {
                 telemetry.addData("heading", getHeading());
                 telemetry.update();
@@ -835,7 +836,7 @@ public class Emmet_auto01 extends LinearOpMode {
 
     //turn zee robit
     private void autoTurn(double targetHeading, double turnSpeed, double maxError, int confidence) {
-        double errorCurrent;
+        double currentError;
         // 1 = left, -1 = right
         double turnDirection;
         double turnSpeedProportional;
@@ -843,46 +844,96 @@ public class Emmet_auto01 extends LinearOpMode {
         double slowDownPoint = 45;
 
         if (opModeIsActive()) {
-             errorCurrent = getError(targetHeading);
-             if (Math.abs(errorCurrent) < maxError) return;
-             motorLeftFront.setPower(0);
-             motorRightFront.setPower(0);
-             motorLeftRear.setPower(0);
-             motorRightRear.setPower(0);
-             motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-             motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-             motorLeftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-             motorRightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            currentError = getError(targetHeading);
+            if (Math.abs(currentError) < maxError) return;
+            motorLeftFront.setPower(0);
+            motorRightFront.setPower(0);
+            motorLeftRear.setPower(0);
+            motorRightRear.setPower(0);
+            motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorLeftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorRightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-             while (opModeIsActive() && confidenceCounter < confidence) {
-                 errorCurrent = getError(targetHeading);
-                 turnDirection = Math.signum(errorCurrent);
-                 turnSpeedProportional = turnSpeed;
-                 if (Math.abs(errorCurrent) < slowDownPoint) {
-                     turnSpeedProportional = Math.abs(errorCurrent) / slowDownPoint * turnSpeed;
-                     turnSpeedProportional = Math.max(turnSpeedProportional, autoMinTurnSpeed);
-                 }
-                 telemetry.addData("current heading", getHeading());
-                 telemetry.addData("target heading", targetHeading);
-                 telemetry.addData("error", errorCurrent);
-                 telemetry.addData("turn speed", turnSpeedProportional * turnDirection);
-                 telemetry.update();
-                 if (Math.abs(errorCurrent) > maxError) {
-                     confidenceCounter = 0;
-                     motorLeftFront.setPower(turnSpeedProportional * turnDirection * -1);
-                     motorRightFront.setPower(turnSpeedProportional * turnDirection);
-                     motorLeftRear.setPower(turnSpeedProportional * turnDirection * -1);
-                     motorRightRear.setPower(turnSpeedProportional * turnDirection);
-                 } else {
-                     confidenceCounter++;
-                     motorLeftFront.setPower(0);
-                     motorRightFront.setPower(0);
-                     motorLeftRear.setPower(0);
-                     motorRightRear.setPower(0);
-                 }
+            while (opModeIsActive() && confidenceCounter < confidence) {
+                currentError = getError(targetHeading);
+                turnDirection = Math.signum(currentError);
+                turnSpeedProportional = turnSpeed;
+                if (Math.abs(currentError) < slowDownPoint) {
+                    turnSpeedProportional = Math.abs(currentError) / slowDownPoint * turnSpeed;
+                    turnSpeedProportional = Math.max(turnSpeedProportional, autoMinTurnSpeed);
+                }
+                telemetry.addData("current heading", getHeading());
+                telemetry.addData("target heading", targetHeading);
+                telemetry.addData("error", currentError);
+                telemetry.addData("turn speed", turnSpeedProportional * turnDirection);
+                telemetry.update();
+                if (Math.abs(currentError) > maxError) {
+                    confidenceCounter = 0;
+                    motorLeftFront.setPower(turnSpeedProportional * turnDirection * -1);
+                    motorRightFront.setPower(turnSpeedProportional * turnDirection);
+                    motorLeftRear.setPower(turnSpeedProportional * turnDirection * -1);
+                    motorRightRear.setPower(turnSpeedProportional * turnDirection);
+                } else {
+                    confidenceCounter++;
+                    motorLeftFront.setPower(0);
+                    motorRightFront.setPower(0);
+                    motorLeftRear.setPower(0);
+                    motorRightRear.setPower(0);
+                }
+            }
+        }
+    }
 
-             }
+    //drive zee robot
+    private void autoDrive(double driveSpeed, double driveDistance, double targetHeading) {
+        int startPosition;
+        double currentError;
+        double speedCorrection = 0;
+        final double maxCorrection = 0.2;
 
+        if (opModeIsActive()) {
+            autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
+            startPosition = motorLeftFront.getCurrentPosition();
+            motorLeftFront.setPower(0);
+            motorRightFront.setPower(0);
+            motorLeftRear.setPower(0);
+            motorRightRear.setPower(0);
+            motorLeftFront.setTargetPosition((int)(motorLeftFront.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorRightFront.setTargetPosition((int)(motorRightFront.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorLeftRear.setTargetPosition((int)(motorLeftRear.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorRightRear.setTargetPosition((int)(motorRightRear.getCurrentPosition() + driveDistance * autoPulsesPerInch));
+            motorLeftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorRightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLeftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorRightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorLeftFront.setPower(driveSpeed);
+            motorRightFront.setPower(driveSpeed);
+            motorLeftRear.setPower(driveSpeed);
+            motorRightRear.setPower(driveSpeed);
+            while (opModeIsActive() && motorLeftRear.isBusy() && motorRightRear.isBusy() && motorRightFront.isBusy() && motorLeftFront.isBusy()) {
+                currentError = getError(targetHeading);
+                speedCorrection = Math.abs(currentError / 50); //adjust as needed
+                speedCorrection = Math.min(maxCorrection, speedCorrection);
+                // correct the sign back to the error
+                speedCorrection *= Math.signum(currentError);
+                // correct the sign to match the direction
+                speedCorrection *= Math.signum(driveDistance);
+                // future work, scale if speeds end up greater than 1
+                motorLeftFront.setPower(driveSpeed - speedCorrection);
+                motorRightFront.setPower(driveSpeed + speedCorrection);
+                motorLeftRear.setPower(driveSpeed - speedCorrection);
+                motorRightRear.setPower(driveSpeed + speedCorrection);
+                telemetry.addData("current heading", getHeading());
+                telemetry.addData("target heading", targetHeading);
+                telemetry.addData("error", currentError);
+                telemetry.addData("correction", speedCorrection);
+                telemetry.update();
+            }
+            motorLeftFront.setPower(0);
+            motorRightFront.setPower(0);
+            motorLeftRear.setPower(0);
+            motorRightRear.setPower(0);
         }
     }
 }
