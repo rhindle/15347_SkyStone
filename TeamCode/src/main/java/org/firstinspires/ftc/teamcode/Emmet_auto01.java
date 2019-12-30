@@ -9,12 +9,16 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaBase;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
 @Autonomous(name = "AA_Emmet_auto01", group = "")
 public class Emmet_auto01 extends LinearOpMode {
@@ -34,6 +38,9 @@ public class Emmet_auto01 extends LinearOpMode {
     private Servo servoRightWhisker;
 
     private BNO055IMU imu;
+    private VuforiaSkyStone vuforiaSkyStone = new VuforiaSkyStone();
+    private static final String VUFORIA_KEY = "AWTeEcT/////AAABmVz1P4UdL0MNjgGWLq6XTd0rW7UNlrpH0vTKgfinUVyzoLMjbYnsVIGWhRT4FPZGkhAUkRXUl7fkApwNdoaFtn2T32Yo/dl47pZhNG0vFeohuNE4O6aoogDSrfhpo/nBjoyCEqyLoxiwYixxCfj2L8Vn5F4qFEw4ezFTjhAfvlBljbVJkYqHakN+v2AxiTxMIAAASLMDJDR4pEfd4E8y3mApNEbnDc73+YLq59fEaQhgkQRrWy+nQ14kPxD0R7afBY7vT6vN6XWC7I7UBo7J4Z7EGDksSlSrUVxeNaW7TUquOr1FEj6F3Jnep/RhJarAo+Ts6yVsK6eka5486Be9O9qxAdxmyYh2WXOVNmsQXgAy";
+    private VuforiaBase.TrackingResults vuforiaResults;
 
 
     private ElapsedTime Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -101,9 +108,13 @@ public class Emmet_auto01 extends LinearOpMode {
     private final double autoDefaultTurnSpeed = 0.5;
     private int autoFlagWhiskers;
     private int autoFlagGrab;
+    private ElapsedTime autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private double autoTime;
+    private ElapsedTime autoSkystoneTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
     @Override
     public void runOpMode() {
+        //vuforiaSkyStone = new VuforiaSkyStone();
         digitalMastHigh = hardwareMap.digitalChannel.get("digital0");
         digitalJibHigh = hardwareMap.digitalChannel.get("digital1");
         digitalMastLow = hardwareMap.digitalChannel.get("digital2");
@@ -119,12 +130,15 @@ public class Emmet_auto01 extends LinearOpMode {
         servoRightWhisker = hardwareMap.servo.get("servo2");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
+
         initialize();
+        autoTimer.reset();
         if (opModeIsActive()) {
+            autoFlashLightOn(true);
             // Put run blocks here.
             //autoTurn(-130, 0.25, 0.5, 5);
             //autoDrive(0.25, 48, 0);
-            autoStrafe(0.25, -48, 0);
+            //autoStrafe(0.25, -48, 0);
             while (opModeIsActive()) {
                 telemetry.addData("heading", getHeading());
                 telemetry.update();
@@ -145,6 +159,9 @@ public class Emmet_auto01 extends LinearOpMode {
                 telemetry.update();
             }*/
         }
+        autoFlashLightOn(false);
+        vuforiaSkyStone.deactivate();
+        vuforiaSkyStone.close();
     }
 
     private void initialize() {
@@ -152,6 +169,14 @@ public class Emmet_auto01 extends LinearOpMode {
         double heading;
 
         setAutonomousVariables();
+
+        // Initialize Vuforia
+        telemetry.addData("Status", "Initializing Vuforia. Please wait...");
+        telemetry.update();
+        initVuforia();
+        // Activate here for camera preview.
+        vuforiaSkyStone.activate();
+
         // Set motor directions and modes
         initMotors();
         initIMU();
@@ -246,6 +271,24 @@ public class Emmet_auto01 extends LinearOpMode {
         imuParameters.loggingEnabled = false;
         // Initialize IMU.
         imu.initialize(imuParameters);
+    }
+
+    private void initVuforia() {
+        // Rotate phone -90 so back camera faces "forward" direction on robot.
+        // Assumes landscape orientation
+        vuforiaSkyStone.initialize(
+                "", // vuforiaLicenseKey
+                VuforiaLocalizer.CameraDirection.BACK, // cameraDirection
+                true, // useExtendedTracking
+                true, // enableCameraMonitoring
+                VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES, // cameraMonitorFeedback
+                0, // dx
+                0, // dy
+                0, // dz
+                0, // xAngle
+                -90, // yAngle
+                0, // zAngle
+                true); // useCompetitionFieldTargetLocations
     }
 
     private double getHeading() {
@@ -799,7 +842,7 @@ public class Emmet_auto01 extends LinearOpMode {
     }
 
     //closes the grabber
-    private  void autoCloseGrabber() {
+    private void autoCloseGrabber() {
         servoGrabber.setPosition(grabberClosed);
     }
 
@@ -816,7 +859,7 @@ public class Emmet_auto01 extends LinearOpMode {
     }
 
     //slightly lower right whisker (for camera)
-    private  void autoLowerRightWhisker() {
+    private void autoLowerRightWhisker() {
         servoRightWhisker.setPosition(0.5);
     }
 
@@ -835,6 +878,25 @@ public class Emmet_auto01 extends LinearOpMode {
         motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorJib.setPower(0.5);
         autoOpenGrabber();
+    }
+
+    //turn flashlight on/off
+    private void autoFlashLightOn(boolean status) {
+        CameraDevice.getInstance().setFlashTorchMode(status);
+    }
+
+    private boolean isTargetVisible(String trackableName) {
+        boolean isVisible;
+
+        // Get vuforia results for target.
+        vuforiaResults = vuforiaSkyStone.track(trackableName);
+        // Is this target visible?
+        if (vuforiaResults.isVisible) {
+            isVisible = true;
+        } else {
+            isVisible = false;
+        }
+        return isVisible;
     }
 
     //turn zee robit
