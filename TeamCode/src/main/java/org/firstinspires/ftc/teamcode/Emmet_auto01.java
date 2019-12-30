@@ -98,6 +98,7 @@ public class Emmet_auto01 extends LinearOpMode {
     private final double autoPulsesPerInch = (383.6 / (3.73 * Math.PI)) * 2;
     private final double autoStrafeFactor = 1.275;
     private int autoSide;
+    private final double autoDefaultTurnSpeed = 0.5;
 
     @Override
     public void runOpMode() {
@@ -119,6 +120,11 @@ public class Emmet_auto01 extends LinearOpMode {
         initialize();
         if (opModeIsActive()) {
             // Put run blocks here.
+            autoTurn(-130, 0.25, 0.5, 5);
+            while (opModeIsActive()) {
+                telemetry.addData("heading", getHeading());
+                telemetry.update();
+            }
             /*while (opModeIsActive()) {
                 Telemetry_LoopStart();
                 readControls();
@@ -252,7 +258,7 @@ public class Emmet_auto01 extends LinearOpMode {
      * getError determines the error between the target angle and the robot's current heading
      * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
      * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
-     *          +ve error means the robot should turn LEFT (CCW) to reduce error.
+     *          positive error means the robot should turn LEFT (CCW) to reduce error.
      */
     public double getError(double targetAngle) {
         double robotError;
@@ -825,5 +831,58 @@ public class Emmet_auto01 extends LinearOpMode {
         motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorJib.setPower(0.5);
         autoOpenGrabber();
+    }
+
+    //turn zee robit
+    private void autoTurn(double targetHeading, double turnSpeed, double maxError, int confidence) {
+        double errorCurrent;
+        // 1 = left, -1 = right
+        double turnDirection;
+        double turnSpeedProportional;
+        int confidenceCounter = 0;
+        double slowDownPoint = 45;
+
+        if (opModeIsActive()) {
+             errorCurrent = getError(targetHeading);
+             if (Math.abs(errorCurrent) < maxError) return;
+             motorLeftFront.setPower(0);
+             motorRightFront.setPower(0);
+             motorLeftRear.setPower(0);
+             motorRightRear.setPower(0);
+             motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+             motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+             motorLeftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+             motorRightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+             while (opModeIsActive() && confidenceCounter < confidence) {
+                 errorCurrent = getError(targetHeading);
+                 turnDirection = Math.signum(errorCurrent);
+                 turnSpeedProportional = turnSpeed;
+                 if (Math.abs(errorCurrent) < slowDownPoint) {
+                     turnSpeedProportional = Math.abs(errorCurrent) / slowDownPoint * turnSpeed;
+                     turnSpeedProportional = Math.max(turnSpeedProportional, autoMinTurnSpeed);
+                 }
+                 telemetry.addData("current heading", getHeading());
+                 telemetry.addData("target heading", targetHeading);
+                 telemetry.addData("error", errorCurrent);
+                 telemetry.addData("turn speed", turnSpeedProportional * turnDirection);
+                 telemetry.update();
+                 if (Math.abs(errorCurrent) > maxError) {
+                     confidenceCounter = 0;
+                     motorLeftFront.setPower(turnSpeedProportional * turnDirection * -1);
+                     motorRightFront.setPower(turnSpeedProportional * turnDirection);
+                     motorLeftRear.setPower(turnSpeedProportional * turnDirection * -1);
+                     motorRightRear.setPower(turnSpeedProportional * turnDirection);
+                 } else {
+                     confidenceCounter++;
+                     motorLeftFront.setPower(0);
+                     motorRightFront.setPower(0);
+                     motorLeftRear.setPower(0);
+                     motorRightRear.setPower(0);
+                 }
+
+             }
+
+        }
     }
 }
