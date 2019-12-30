@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package Boneyard;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -8,28 +8,30 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
-@TeleOp(name = "StarterExample (Studio)", group = "")
+@TeleOp(name = "A_Emmet01", group = "")
 @Disabled
-public class StarterExample_Studio extends LinearOpMode {
+public class A_Emmet01a extends LinearOpMode {
 
     private DigitalChannel digital0;
     private DigitalChannel digital1;
-    private DcMotor motor0;
-    private DcMotor motor1;
-    private DcMotor motor2;
-    private DcMotor motor3;
-    private DcMotor motor0B;
-    private DcMotor motor1B;
-    private Servo servo0;
-    private Servo servo1;
-    private Servo servo2;
     private DigitalChannel digital2;
     private DigitalChannel digital3;
+    private DcMotor motorLeftFront;
+    private DcMotor motorRightFront;
+    private DcMotor motorLeftRear;
+    private DcMotor motorRightRear;
+    private DcMotor motorMast;
+    private DcMotor motorJib;
+    private Servo servoGrabber;
+    private Servo servo1;
+    private Servo servo2;
+
 
     private ElapsedTime Timer_Loop;
-    private double Time_Loop;
+    //private double Time_Loop;
 
     private double Limit_DriveSpeed;
 
@@ -62,6 +64,7 @@ public class StarterExample_Studio extends LinearOpMode {
     private double Position_Servo0;
 
     private int Flag_Crane_IsHomed;
+    private boolean Flag_Emmet = false;
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -70,13 +73,13 @@ public class StarterExample_Studio extends LinearOpMode {
     public void runOpMode() {
         digital0 = hardwareMap.digitalChannel.get("digital0");
         digital1 = hardwareMap.digitalChannel.get("digital1");
-        motor0 = hardwareMap.dcMotor.get("motor0");
-        motor1 = hardwareMap.dcMotor.get("motor1");
-        motor2 = hardwareMap.dcMotor.get("motor2");
-        motor3 = hardwareMap.dcMotor.get("motor3");
-        motor0B = hardwareMap.dcMotor.get("motor0B");
-        motor1B = hardwareMap.dcMotor.get("motor1B");
-        servo0 = hardwareMap.servo.get("servo0");
+        motorLeftFront = hardwareMap.dcMotor.get("motor0");
+        motorRightFront = hardwareMap.dcMotor.get("motor1");
+        motorLeftRear = hardwareMap.dcMotor.get("motor2");
+        motorRightRear = hardwareMap.dcMotor.get("motor3");
+        motorMast = hardwareMap.dcMotor.get("motor0B");
+        motorJib = hardwareMap.dcMotor.get("motor1B");
+        servoGrabber = hardwareMap.servo.get("servo0");
         servo1 = hardwareMap.servo.get("servo1");
         servo2 = hardwareMap.servo.get("servo2");
         digital2 = hardwareMap.digitalChannel.get("digital2");
@@ -145,31 +148,31 @@ public class StarterExample_Studio extends LinearOpMode {
      * Describe this function...
      */
     private void InitMotors() {
-        motor0.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor1.setDirection(DcMotorSimple.Direction.FORWARD);
-        motor2.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor3.setDirection(DcMotorSimple.Direction.FORWARD);
-        motor0.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor0.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor0B.setDirection(DcMotorSimple.Direction.FORWARD);
-        motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor0B.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor1B.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor1B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor1B.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        servo0.setDirection(Servo.Direction.FORWARD);
+        motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRightRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLeftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorRightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLeftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorMast.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorMast.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorJib.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorJib.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorJib.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        servoGrabber.setDirection(Servo.Direction.FORWARD);
         servo1.setDirection(Servo.Direction.FORWARD);
         servo2.setDirection(Servo.Direction.REVERSE);
     }
@@ -178,7 +181,8 @@ public class StarterExample_Studio extends LinearOpMode {
      * Describe this function...
      */
     private double CalculateLoopTime() {
-        Time_Loop = Timer_Loop.milliseconds();
+        double Time_Loop = Timer_Loop.milliseconds();
+
         Timer_Loop.reset();
         return Time_Loop;
     }
@@ -270,5 +274,32 @@ public class StarterExample_Studio extends LinearOpMode {
      * Describe this function...
      */
     private void ControlDrivetrain() {
+        double leftFrontPower, rightFrontPower, leftRearPower, rightRearPower, maxPower;
+
+        leftFrontPower = Control_Y_Drive + Control_X_Strafe + Control_R_Rotate;
+        rightFrontPower = Control_Y_Drive - Control_X_Strafe - Control_R_Rotate;
+        leftRearPower = Control_Y_Drive - Control_X_Strafe + Control_R_Rotate;
+        rightRearPower = Control_Y_Drive + Control_X_Strafe - Control_R_Rotate;
+
+        //find max and normalize
+        maxPower = Math.max(Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower)), Math.max(Math.abs(leftRearPower), Math.abs(rightRearPower)));
+        maxPower = Math.max(maxPower, 1);
+        leftFrontPower /= maxPower;
+        rightFrontPower /= maxPower;
+        leftRearPower /= maxPower;
+        rightRearPower /= maxPower;
+
+        //limit motors to max speed
+        leftFrontPower *= Limit_DriveSpeed;
+        rightFrontPower *= Limit_DriveSpeed;
+        leftRearPower *= Limit_DriveSpeed;
+        rightRearPower *= Limit_DriveSpeed;
+
+        //set motor powers
+        motorLeftFront.setPower(leftFrontPower);
+        motorRightFront.setPower(rightFrontPower);
+        motorLeftRear.setPower(leftRearPower);
+        motorRightRear.setPower(rightRearPower);
+
     }
 }
