@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,9 +19,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaBase;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
-@Autonomous(name = "AA_Emmet_auto02", group = "")
-@Disabled
-public class Emmet_auto02 extends LinearOpMode {
+@Autonomous(name = "Emmet's Autonomous", group = "")
+public class Emmet_Autonomous extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
@@ -96,16 +94,18 @@ public class Emmet_auto02 extends LinearOpMode {
     private boolean flagJibHolding = false;
     private boolean flagEmmetIsCoolerThanYou = true;
 
-    private int autoAlliance;
+    //These three cannot be private because they need to be overwritable
+    int autoAlliance;
+    int autoSide;
+    int autoParkingPosition;
+
     private int autoDirection;
-    private int autoParkingPosition;
     private int autoSkystonePattern;
     private double autoSkystoneY;
     private boolean flagIsGobilda = false;
     private final double autoMinTurnSpeed = 0.06;
     private final double autoPulsesPerInch = (383.6 / (3.73 * Math.PI)) * 2;
     private final double autoStrafeFactor = 1.275;
-    private int autoSide;
     private final double autoDefaultTurnSpeed = 0.5;
     private int autoFlagWhiskers;
     private int autoFlagGrab;
@@ -200,15 +200,15 @@ public class Emmet_auto02 extends LinearOpMode {
             heading = getHeading();
             if (heading != 0) imuOk = true;
             // Prompt user to press start buton.
-            telemetry.addData(">", "Press Play to start");
-            telemetry.addData("heading", heading);
-            telemetry.addData("OK", imuOk);
+            telemetry.addData(">", "Press Play to Start");
+            telemetry.addData("Heading", heading);
+            telemetry.addData("IMU OK?", imuOk ? "TRUE" : "*** FALSE ***");
             telemetry.addData("/////////////////////////////////////////////////////", " ");
-            telemetry.addData("location", autoSide == 1 ? "FOUNDATION (BUILD SITE)" : "QUARRY (SKYSTONES)");
-            telemetry.addData("alliance", autoAlliance == 1 ? "BLUE" : "RED");
-            telemetry.addData("parking", autoParkingPosition == 1 ? "NEAR" : "FAR");
+            telemetry.addData("Alliance", autoAlliance == 1 ? "BLUE" : "RED");
+            telemetry.addData("Location", autoSide == 1 ? "FOUNDATION (BUILD SITE)" : "QUARRY (SKYSTONES)");
+            telemetry.addData("Parking", autoParkingPosition == 1 ? "NEAR" : "FAR");
             telemetry.addData("/////////////////////////////////////////////////////", " ");
-            telemetry.addData("craneIsHomed", flagCraneIsHomed ? "TRUE" : "FALSE***");
+            telemetry.addData("Crane Homed?", flagCraneIsHomed ? "TRUE" : "*** FALSE ***");
             telemetry.update();
             if (gamepad2.x) autoAlliance = 1;
             if (gamepad2.b) autoAlliance = 2;
@@ -1116,6 +1116,7 @@ public class Emmet_auto02 extends LinearOpMode {
                 break;
             }
         }
+        //guess if needed
         if (autoSkystonePattern == 0 && autoAlliance == 1){
             autoSkystonePattern = 2;
         } else if (autoSkystonePattern == 0 && autoAlliance == 2) {

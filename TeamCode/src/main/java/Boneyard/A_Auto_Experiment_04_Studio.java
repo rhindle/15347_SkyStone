@@ -1,7 +1,8 @@
-package org.firstinspires.ftc.teamcode;
+package Boneyard;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -13,30 +14,25 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaBase;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
-@Autonomous(name = "B_Auto_Experiment_03_03 (BTJ-Studio)", group = "")
-public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
+@Autonomous(name = "A_Auto_Experiment_04 (BTJ-Studio)", group = "")
+@Disabled
+public class A_Auto_Experiment_04_Studio extends LinearOpMode {
 
-    private VuforiaSkyStone vuforiaSkyStone;
-    private Servo servo0;
-    private DcMotor motor0B;
     private DcMotor motor0;
     private DcMotor motor2;
     private DcMotor motor1;
     private DcMotor motor3;
     private Servo servo1;
     private Servo servo2;
-    private DcMotor motor1B;
     private BNO055IMU imu;
 
     private int flagWhiskers = 0;
-    private int flagGrabber = 0;
+    //private int flagGrabber = 0;
     private int directionModifier = 1;
     private int parkPosition = 1;
-    private int skystonePattern = 0;
-    private double skyStoneY = 0;
+    //private int skystonePattern = 0;
+    //private double skyStoneY = 0;
     private int allianceSide = 1;
     private int robotType = 1;
 
@@ -47,28 +43,59 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
     private double pulsesPerInch = (383.6 / (3.933 * Math.PI)) * 2;
     private double strafeDistanceFactor = 1.073;
 
-    private ElapsedTime skystoneTimer;
+    //private ElapsedTime skystoneTimer;
     private ElapsedTime elapsedTime;
 
-    private static final String VUFORIA_KEY = "AWTeEcT/////AAABmVz1P4UdL0MNjgGWLq6XTd0rW7UNlrpH0vTKgfinUVyzoLMjbYnsVIGWhRT4FPZGkhAUkRXUl7fkApwNdoaFtn2T32Yo/dl47pZhNG0vFeohuNE4O6aoogDSrfhpo/nBjoyCEqyLoxiwYixxCfj2L8Vn5F4qFEw4ezFTjhAfvlBljbVJkYqHakN+v2AxiTxMIAAASLMDJDR4pEfd4E8y3mApNEbnDc73+YLq59fEaQhgkQRrWy+nQ14kPxD0R7afBY7vT6vN6XWC7I7UBo7J4Z7EGDksSlSrUVxeNaW7TUquOr1FEj6F3Jnep/RhJarAo+Ts6yVsK6eka5486Be9O9qxAdxmyYh2WXOVNmsQXgAy";
-    private VuforiaBase.TrackingResults vuforiaResults;
+    //private static final String VUFORIA_KEY = "AWTeEcT/////AAABmVz1P4UdL0MNjgGWLq6XTd0rW7UNlrpH0vTKgfinUVyzoLMjbYnsVIGWhRT4FPZGkhAUkRXUl7fkApwNdoaFtn2T32Yo/dl47pZhNG0vFeohuNE4O6aoogDSrfhpo/nBjoyCEqyLoxiwYixxCfj2L8Vn5F4qFEw4ezFTjhAfvlBljbVJkYqHakN+v2AxiTxMIAAASLMDJDR4pEfd4E8y3mApNEbnDc73+YLq59fEaQhgkQRrWy+nQ14kPxD0R7afBY7vT6vN6XWC7I7UBo7J4Z7EGDksSlSrUVxeNaW7TUquOr1FEj6F3Jnep/RhJarAo+Ts6yVsK6eka5486Be9O9qxAdxmyYh2WXOVNmsQXgAy";
+    //private VuforiaBase.TrackingResults vuforiaResults;
 
+
+    /**
+     * Describe this function...
+     */
+    private void AutoThing() {
+        flagWhiskers = 0;
+        stowWhiskers();
+        // Drive toward foundation
+        goDrive(0.5, 24, 0 * directionModifier, 1);
+        // Strafe to middle of foundation
+        goStrafe(0.25, 12 * directionModifier, 0 * directionModifier, 1);
+        // Drive into foundation and grab it
+        flagWhiskers = 6;
+        goDrive(0.15, 12, 0 * directionModifier, 1);
+        // Back up a little at a shallow angle
+        goDrive(0.5, -12, 13 * directionModifier, 1);
+        // Back up more at larger angle
+        goDrive(0.5, -24, 30 * directionModifier, 1);
+        // Push foundation square to side
+        goDrive(0.5, 18, 90 * directionModifier, 1);
+        // Open whiskers and wait for them to clear
+        stowWhiskers();
+        sleep(500);
+        // Back away from foundation
+        goDrive(0.5, -12, 90 * directionModifier, 1);
+        // Strafe into parking position
+        // 1 run into wall
+        goStrafe(0.25, 24 * directionModifier, 90 * directionModifier, 1);
+        // 2 move to far position if necessary
+        if (parkPosition == 2) {
+            goStrafe(0.25, -26 * directionModifier, 90 * directionModifier, 1);
+        }
+        // Back under Skybridge
+        goDrive(0.5, -30, 90 * directionModifier, 1);
+    }
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
      */
     @Override
     public void runOpMode() {
-        vuforiaSkyStone = new VuforiaSkyStone();
-        servo0 = hardwareMap.servo.get("servo0");
-        motor0B = hardwareMap.dcMotor.get("motor0B");
         motor0 = hardwareMap.dcMotor.get("motor0");
         motor2 = hardwareMap.dcMotor.get("motor2");
         motor1 = hardwareMap.dcMotor.get("motor1");
         motor3 = hardwareMap.dcMotor.get("motor3");
         servo1 = hardwareMap.servo.get("servo1");
         servo2 = hardwareMap.servo.get("servo2");
-        motor1B = hardwareMap.dcMotor.get("motor1B");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
         initialize();
@@ -82,145 +109,6 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
                 telemetry.update();
             }
         }
-
-        vuforiaSkyStone.close();
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void initVuforia() {
-        // Rotate phone -90 so back camera faces "forward" direction on robot.
-        // Assumes landscape orientation
-        vuforiaSkyStone.initialize(
-                "", // vuforiaLicenseKey
-                VuforiaLocalizer.CameraDirection.BACK, // cameraDirection
-                true, // useExtendedTracking
-                true, // enableCameraMonitoring
-                VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES, // cameraMonitorFeedback
-                0, // dx
-                0, // dy
-                0, // dz
-                0, // xAngle
-                -90, // yAngle
-                0, // zAngle
-                true); // useCompetitionFieldTargetLocations
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void AutoThing() {
-        flagWhiskers = 0;
-        flagGrabber = 0;
-        stowWhiskers();
-        lowerRightWhisker();
-        // Drive toward stones
-        goDrive(0.15, 18, 0 * directionModifier, 1);
-        sleep(500);
-        // turn toward left stone if nothing is detected
-        if (!isTargetVisible("Stone Target")) {
-            setHeading(30, 0.5, 3, 1);
-            sleep(500);
-            setHeading(0, 0.5, 1, 4);
-        }
-        lookForSkystones();
-        telemetry.addData("Skystone Pattern", skystonePattern);
-        telemetry.update();
-        if (skystonePattern == 1) {
-            // skystone closest to bridge
-            goStrafe(0.25, 12 * directionModifier, 0 * directionModifier, 1);
-        } else if (skystonePattern == 3) {
-            // skystone 3rd from bridge
-            goStrafe(0.25, -3 * directionModifier, 0 * directionModifier, 1);
-        } else {
-            // skystone middley
-            goStrafe(0.25, 5 * directionModifier, 0 * directionModifier, 1);
-        }
-        vuforiaSkyStone.deactivate();
-        stowWhiskers();
-        // Drive closer to stones
-        goDrive(0.5, 10, 0 * directionModifier, 1);
-        // drive slowly to stone
-        deployGrabber();
-        flagGrabber = 8;
-        goDrive(0.1, 10, 0 * directionModifier, 1);
-        liftGrabber();
-        sleep(500);
-        // back up from stones
-        goDrive(0.5, -12, 0 * directionModifier, 1);
-        // drive beneath the bridge
-        if (skystonePattern == 1) {
-            // skystone closest to bridge
-            goDrive(0.5, 36, 90 * directionModifier, 1);
-        } else if (skystonePattern == 3) {
-            // skystone 3rd from bridge
-            goDrive(0.5, 36 + 16, 90 * directionModifier, 1);
-        } else {
-            // skystone middley
-            goDrive(0.5, 36 + 8, 90 * directionModifier, 1);
-        }
-        openGrabber();
-        sleep(500);
-        // back up and park
-        goDrive(0.5, -12, 90 * directionModifier, 1);
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void openGrabber() {
-        servo0.setPosition(0.6);
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void lookForSkystones() {
-        skystoneTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-        skystonePattern = 0;
-        skyStoneY = 0;
-        while (opModeIsActive() && skystoneTimer.seconds() < 2) {
-            // Are the targets visible?
-            // (Note we only process first visible target).
-            if (isTargetVisible("Stone Target")) {
-                // Convert Vuforia units to inches
-                skyStoneY = vuforiaResults.y / 25.4;
-                if (allianceSide == 1) {
-                    // blue
-                    if (skyStoneY > -6 && skyStoneY < 2) {
-                        skystonePattern = 3;
-                    } else if (skyStoneY > 2) {
-                        skystonePattern = 1;
-                    } else {
-                        skystonePattern = 2;
-                    }
-                } else if (allianceSide == 2) {
-                    // red
-                    if (skyStoneY > -8 && skyStoneY < 0) {
-                        skystonePattern = 2;
-                    } else if (skyStoneY > 0) {
-                        skystonePattern = 1;
-                    } else {
-                        skystonePattern = 3;
-                    }
-                }
-                break;
-            } else {
-                telemetry.addData("No Skystone Detected", "Targets are not visible.");
-            }
-            telemetry.update();
-        }
-        // make a guess?
-        if (skystonePattern == 0) {
-            if (allianceSide == 1) {
-                // blue
-                skystonePattern = 2;
-            } else if (allianceSide == 2) {
-                // red
-                skystonePattern = 3;
-            }
-        }
     }
 
     /**
@@ -229,16 +117,9 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
     private void initialize() {
         setConstantsAndVars();
         elapsedTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        // Initialize Vuforia
-        telemetry.addData("Status", "Initializing Vuforia. Please wait...");
-        telemetry.update();
-        initVuforia();
-        // Activate here for camera preview.
-        vuforiaSkyStone.activate();
         // Set motor directions and modes
         initMotors();
         initIMU();
-        stowWhiskers();
         while (!isStarted()) {
             // Prompt user to press start buton.
             telemetry.addData(">", "Press Play to start");
@@ -262,24 +143,6 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
                 parkPosition = 2;
             }
         }
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void closeGrabber() {
-        servo0.setPosition(0.4);
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void liftGrabber() {
-        // Raise the Mast a little
-        motor0B.setPower(0);
-        motor0B.setTargetPosition(300);
-        motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor0B.setPower(0.3);
     }
 
     /**
@@ -355,34 +218,6 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
         motor3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         servo1.setDirection(Servo.Direction.FORWARD);
         servo2.setDirection(Servo.Direction.REVERSE);
-        // Crane Motors
-        motor0B.setDirection(DcMotorSimple.Direction.FORWARD);
-        motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor0B.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor1B.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor1B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor1B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor1B.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void deployGrabber() {
-        // Position the Jib
-        motor1B.setPower(0);
-        motor1B.setTargetPosition(1000);
-        motor1B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor1B.setPower(0.5);
-        servo0.setPosition(0.6);
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void lowerRightWhisker() {
-        servo2.setPosition(0.5);
     }
 
     /**
@@ -415,6 +250,22 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
     /**
      * Describe this function...
      */
+    private void initIMU() {
+        BNO055IMU.Parameters imuParameters;
+
+        // Create new IMU Parameters object.
+        imuParameters = new BNO055IMU.Parameters();
+        // Use degrees as angle unit.
+        imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        // Disable logging.
+        imuParameters.loggingEnabled = false;
+        // Initialize IMU.
+        imu.initialize(imuParameters);
+    }
+
+    /**
+     * Describe this function...
+     */
     private double getError(double targetAngle) {
         double robotError;
 
@@ -431,39 +282,6 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
             robotError += 360;
         }
         return robotError;
-    }
-
-    /**
-     * Describe this function...
-     */
-    private void initIMU() {
-        BNO055IMU.Parameters imuParameters;
-
-        // Create new IMU Parameters object.
-        imuParameters = new BNO055IMU.Parameters();
-        // Use degrees as angle unit.
-        imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        // Disable logging.
-        imuParameters.loggingEnabled = false;
-        // Initialize IMU.
-        imu.initialize(imuParameters);
-    }
-
-    /**
-     * Check to see if the target is visible.
-     */
-    private boolean isTargetVisible(String trackableName) {
-        boolean isVisible;
-
-        // Get vuforia results for target.
-        vuforiaResults = vuforiaSkyStone.track(trackableName);
-        // Is this target visible?
-        if (vuforiaResults.isVisible) {
-            isVisible = true;
-        } else {
-            isVisible = false;
-        }
-        return isVisible;
     }
 
     /**
@@ -526,10 +344,10 @@ public class B_Auto_Experiment_03_03_Studio extends LinearOpMode {
                     flagWhiskers = 0;
                     activateWhiskers();
                 }
-                if (flagGrabber != 0 && motor0.getCurrentPosition() > startPosition + pulsesPerInch * flagGrabber) {
-                    flagGrabber = 0;
-                    closeGrabber();
-                }
+//                if (flagGrabber != 0 && motor0.getCurrentPosition() > startPosition + pulsesPerInch * flagGrabber) {
+//                    flagGrabber = 0;
+//                    closeGrabber();
+//                }
             }
             motor0.setPower(0);
             motor2.setPower(0);

@@ -1,7 +1,8 @@
 
 
-package org.firstinspires.ftc.teamcode;
+package Boneyard;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
 @TeleOp(name = "Blocky_Vuforia (BTJ_Studio)", group = "")
+@Disabled
 public class Blocky_Vuforia_Studio extends LinearOpMode {
 
 
