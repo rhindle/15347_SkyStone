@@ -1,7 +1,8 @@
-package org.firstinspires.ftc.teamcode;
+package Boneyard;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
 @Autonomous(name = "AAA Emmet auto01 (LK)", group = "")
+@Disabled
 public class Emmet_auto01__LK extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
