@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
-@TeleOp(name = "Emmet's TeleOp", group = "")
-public class Emmet_TeleOp extends LinearOpMode {
+@TeleOp(name = "Emmet's TeleOp Old", group = "")
+public class Emmet_TeleOpOld extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
@@ -48,7 +48,7 @@ public class Emmet_TeleOp extends LinearOpMode {
     private final int mastPositionJibSafe = 200;
     private final int mastPositionBridgeSafe = 300;
 
-    private final int jibPositionMax = 3829;
+    private final int jibPositionMax = 3900;
     private final int jibPositionMin = 0;
     private final int jibPositionPark = 350;
     private final int jibPositionGrab = 1000;
@@ -74,13 +74,11 @@ public class Emmet_TeleOp extends LinearOpMode {
     private double whiskerPosition;
     private final double whiskerUp = 0;
     private final double whiskerDown = 0.8;
-    private final double whiskerSpeedLimit = 0.35;
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
     private boolean flagJibHolding = false;
     private boolean flagEmmetIsCoolerThanYou = true;
-    private  boolean flagPresetRequested = false;
 
     @Override
     public void runOpMode() {
@@ -226,16 +224,9 @@ public class Emmet_TeleOp extends LinearOpMode {
             if (gamepad2.y) multiStageGrab();
             if (gamepad2.dpad_left) parkGrabber();
             if (gamepad2.dpad_right) moveGrabberToFoundation();
-            if (gamepad2.dpad_up && !flagPresetRequested) {
-                flagPresetRequested = true;
-                moveUpPresetHeights();
-            }
-            if (gamepad2.dpad_down && !flagPresetRequested) {
-                flagPresetRequested = true;
-                moveDownPresetHeights();
-            }
+            if (gamepad2.dpad_up) moveUpPresetHeights();
+            if (gamepad2.dpad_down) moveDownPresetHeights();
         }
-        if (!gamepad2.dpad_up && !gamepad2.dpad_down) flagPresetRequested = false;
     }
 
     private void multiStageGrab() {
@@ -251,7 +242,7 @@ public class Emmet_TeleOp extends LinearOpMode {
                     motorJib.setPower(0);
                     motorJib.setTargetPosition(jibPositionCurrent + 1000);
                     motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorJib.setPower(1); //0.5
+                    motorJib.setPower(0.5);
                     flagJibHolding = true;
                     jibPositionHold = jibPositionCurrent + 1000;
                     while (motorJib.isBusy() && opModeIsActive()) {
@@ -266,7 +257,7 @@ public class Emmet_TeleOp extends LinearOpMode {
                     motorMast.setPower(0);
                     motorMast.setTargetPosition(mastPositionBridgeSafe);
                     motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorMast.setPower(1); //0.3
+                    motorMast.setPower(0.3);
                     flagMastHolding = true;
                     mastPositionHold =  mastPositionBridgeSafe;
                     while (motorMast.isBusy() && opModeIsActive()) {
@@ -274,9 +265,9 @@ public class Emmet_TeleOp extends LinearOpMode {
                     }
                     //pull the jib back to bumper
                     motorJib.setPower(0);
-                    motorJib.setTargetPosition(jibPositionGrab + 200);
+                    motorJib.setTargetPosition(jibPositionGrab);
                     motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    motorJib.setPower(-1); // -0.5
+                    motorJib.setPower(-0.5);
                     flagJibHolding = true;
                     jibPositionHold = jibPositionGrab;
                 }
@@ -331,12 +322,12 @@ public class Emmet_TeleOp extends LinearOpMode {
             motorMast.setPower(0);
             motorMast.setTargetPosition(mastPositionMin);
             motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motorMast.setPower(-1);
+            motorMast.setPower(0.5);
             //position the jib
             motorJib.setPower(0);
             motorJib.setTargetPosition(jibPositionPark);
             motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motorJib.setPower(-0.5);
+            motorJib.setPower(0.5);
             //ready the grabber
             grabberPosition = grabberSafe;
 
@@ -560,7 +551,7 @@ public class Emmet_TeleOp extends LinearOpMode {
         if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
             servoLeftWhisker.setPosition(whiskerPosition);
             servoRightWhisker.setPosition(whiskerPosition);
-            driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
+            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
         } else {
             servoLeftWhisker.setPosition(whiskerUp);
             servoRightWhisker.setPosition(whiskerUp);

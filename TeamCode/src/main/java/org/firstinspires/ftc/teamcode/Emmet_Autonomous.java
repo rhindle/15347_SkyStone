@@ -1142,15 +1142,17 @@ public class Emmet_Autonomous extends LinearOpMode {
         // Back up more at larger angle
         autoDrive(0.5, -24, 30 * autoDirection);
         // Push foundation square to side
-        autoDrive(0.5, 18, 90 * autoDirection);
+        autoDrive(0.5, 20, 90 * autoDirection);
         // Open whiskers and wait for them to clear
         autoStowWhiskers();
+        //slide over so whiskers don't get stuck
+        autoStrafe(0.25, -2 * autoDirection, 0 * autoDirection);
         sleep(500);
         // Back away from foundation
         autoDrive(0.5, -12, 90 * autoDirection);
         // Strafe into parking position
         // 1 run into wall
-        autoStrafe(0.25, 24 * autoDirection, 90 * autoDirection);
+        autoStrafe(0.25, 26 * autoDirection, 90 * autoDirection);
         // 2 move to far position if necessary
         if (autoParkingPosition == 2) {
             autoStrafe(0.25, -26 * autoDirection, 90 * autoDirection);
@@ -1205,6 +1207,7 @@ public class Emmet_Autonomous extends LinearOpMode {
         // back up from stones
         autoDrive(0.5, -12, 0 * autoDirection);
         // drive beneath the bridge
+        //make changes here to allow near and far
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
             autoDrive(0.5, 36, 90 * autoDirection);
