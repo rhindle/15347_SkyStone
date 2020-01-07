@@ -1146,7 +1146,7 @@ public class Emmet_Autonomous extends LinearOpMode {
         // Open whiskers and wait for them to clear
         autoStowWhiskers();
         //slide over so whiskers don't get stuck
-        autoStrafe(0.25, -2 * autoDirection, 0 * autoDirection);
+        autoStrafe(0.25, -2 * autoDirection, 90 * autoDirection);
         sleep(500);
         // Back away from foundation
         autoDrive(0.5, -12, 90 * autoDirection);
