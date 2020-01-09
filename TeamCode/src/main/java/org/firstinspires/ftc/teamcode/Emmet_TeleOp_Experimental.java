@@ -74,7 +74,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
     private double whiskerPosition;
     private final double whiskerUp = 0;
     private final double whiskerDown = 0.8;
-    private final double whiskerSpeedLimit = 0.35;
+    private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
