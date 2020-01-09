@@ -12,6 +12,6 @@ public class Autonomous_Override_Blue_Skystone extends Emmet_Autonomous {
         // 1 is foundation, 2 is quarry
         autoSide = 2;
         //1 is near, 2 is far
-        autoParkingPosition = 1;
+        autoParkingPosition = 2;
     }
 }
