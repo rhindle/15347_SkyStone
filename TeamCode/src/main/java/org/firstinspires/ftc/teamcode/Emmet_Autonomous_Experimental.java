@@ -249,7 +249,7 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         // 1 is foundation, 2 is quarry
         autoSide = 1;
         //1 is near, 2 is far
-        autoParkingPosition = 1;
+        autoParkingPosition = 2;
     }
 
     private void initMotors() {
