@@ -203,9 +203,17 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
         if (homingState != 0) {
             driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
         }
+//        if (mastPositionCurrent > 1500 || jibPositionCurrent > 2500) {
+//            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
+//        }
+
+        // new- don't use crane speed limit when whiskers down
         if (mastPositionCurrent > 1500 || jibPositionCurrent > 2500) {
-            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
+            if (whiskerPosition != whiskerDown) {
+                driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
+            }
         }
+
         telemetry.addData("Speed Limit", driveSpeedLimit);
 
         //rest of controls
@@ -579,6 +587,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
 
         //new to allow whiskers while supporting top block
         if (gamepad1.right_bumper && gamepad1.left_bumper) {
+            whiskerPosition = whiskerDown;
             servoLeftWhisker.setPosition(whiskerDown);
             servoRightWhisker.setPosition(whiskerDown);
             driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
