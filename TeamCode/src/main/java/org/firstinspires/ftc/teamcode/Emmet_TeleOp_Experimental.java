@@ -26,6 +26,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
     private Servo servoGrabber;
     private Servo servoLeftWhisker;
     private Servo servoRightWhisker;
+    private Servo servoCapstone;
 
 
     private ElapsedTime Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -76,6 +77,12 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
     private final double whiskerDown = 0.8;
     private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
 
+    //capstone
+    private final double capstoneUp = 0.1;
+    private final double capstoneDown = 0.65;
+    private final double capstoneMove = 0.03;
+    private double capstonePosition = capstoneUp;
+
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
     private boolean flagJibHolding = false;
@@ -97,7 +104,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
-
+        servoCapstone = hardwareMap.servo.get("servo5");
 
         initialize();
         if (opModeIsActive()) {
@@ -236,6 +243,17 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
             }
         }
         if (!gamepad2.dpad_up && !gamepad2.dpad_down) flagPresetRequested = false;
+
+        if(gamepad1.a) {
+            capstonePosition = capstonePosition + capstoneMove;
+            capstonePosition = Math.min(capstonePosition, capstoneDown);
+        }
+
+        if (gamepad1.b) {
+            capstonePosition = capstonePosition - capstoneMove;
+            capstonePosition = Math.max(capstonePosition, capstoneUp);
+        }
+
     }
 
     private void multiStageGrab() {
@@ -553,6 +571,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
 
     private void controlServos() {
         servoGrabber.setPosition(grabberPosition);
+        servoCapstone.setPosition(capstonePosition);
 //        if (whiskerPosition == whiskerUp) {
 //            servoLeftWhisker.setPosition(whiskerPosition);
 //            servoRightWhisker.setPosition(whiskerPosition);
