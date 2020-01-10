@@ -1451,22 +1451,22 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         //slide over so whiskers don't get stuck
         autoStrafe(0.25, -2 * autoDirection, 90 * autoDirection);
         sleep(500);
-        // Back away from foundation
-        autoDrive(0.5, -12, 90 * autoDirection);
+        // Back away from foundation (just a little)
+        autoDrive(0.5, -2, 90 * autoDirection);  //-12
 
         // stow the grabber
         parkGrabber();
         servoGrabber.setPosition(grabberPosition);
 
         // Strafe into parking position
-        // 1 run into wall
+        // 1 run into wall  (can probably make this less)
         autoStrafe(0.25, 26 * autoDirection, 90 * autoDirection);
         // 2 move to far position if necessary
         if (autoParkingPosition == 2) {
             autoStrafe(0.25, -26 * autoDirection, 90 * autoDirection);
         }
-        // Back under Skybridge
-        autoDrive(0.5, -30, 90 * autoDirection);
+        // Back under Skybridge (added 10)
+        autoDrive(0.5, -40, 90 * autoDirection);  //-30
 
     }
 }
