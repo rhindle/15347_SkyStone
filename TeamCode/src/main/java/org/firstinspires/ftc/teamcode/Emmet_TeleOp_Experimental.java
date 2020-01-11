@@ -172,6 +172,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
+        servoCapstone.setDirection(Servo.Direction.REVERSE);
     }
 
     private double CalculateLoopTime() {
