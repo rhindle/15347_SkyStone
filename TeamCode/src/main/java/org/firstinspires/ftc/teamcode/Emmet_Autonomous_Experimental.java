@@ -1356,11 +1356,11 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         autoFlagGrab = 0;
         autoStowWhiskers();
         autoLowerRightWhisker();
-        // Drive toward stones
-        autoDrive(0.15, 18, 0 * autoDirection); // ** speed up?
-        sleep(500);
+        // Drive toward stones previous speed 0.15
+        autoDrive(0.25 , 18, 0 * autoDirection); // ** speed up?
+        //sleep(500);
         autoFlashLightOn(true);
-        sleep(500);
+        sleep(750);
         // turn toward left stone if nothing is detected
 // skip this for speed
 //        if (!isTargetVisible("Stone Target")) {
@@ -1386,16 +1386,17 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         }
         //vuforiaSkyStone.deactivate();
         autoStowWhiskers();
-        // Drive closer to stones
-        autoDrive(0.5, 10, 0 * autoDirection);
+        // Drive closer to stones was .5
+        autoDrive(0.6, 10, 0 * autoDirection);
         // drive slowly to stone
         autoReadyGrabber();
+        // was 8 and 10"
         autoFlagGrab = 8;
         autoDrive(0.15, 10, 0 * autoDirection);  //0.1
         autoRaiseMast();
         sleep(500);
-        // back up from stones
-        autoDrive(0.5, -12, 0 * autoDirection);
+        // back up from stones was -12
+        autoDrive(0.5, -13, 0 * autoDirection);
         // drive beneath the bridge
         //make changes here to allow near and far
 // no near movement in this one
@@ -1405,15 +1406,29 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
 //        }
 
 // now driving backwards for safety
-        if (autoSkystonePattern == 1) {
-            // skystone closest to bridge
-            autoDrive(0.5, 72, -90 * autoDirection);
-        } else if (autoSkystonePattern == 3) {
-            // skystone 3rd from bridge
-            autoDrive(0.5, 72 + 16, -90 * autoDirection);
+        //1 = blue, 2 = red
+        if (autoAlliance == 2) {
+            if (autoSkystonePattern == 1) {
+                // skystone closest to bridge was .5 .75 was ok degree was -90
+                autoDrive(0.85, -72, -89 * autoDirection);
+            } else if (autoSkystonePattern == 3) {
+                // skystone 3rd from bridge
+                autoDrive(0.85, -72 - 16, -89 * autoDirection);
+            } else {
+                // skystone middley
+                autoDrive(0.85, -72 - 8, -89 * autoDirection);
+            }
         } else {
-            // skystone middley
-            autoDrive(0.5, 72 + 8, -90 * autoDirection);
+            if (autoSkystonePattern == 1) {
+                // skystone closest to bridge was .5 .75 was ok degree was -90
+                autoDrive(0.85, -72, -90 * autoDirection);
+            } else if (autoSkystonePattern == 3) {
+                // skystone 3rd from bridge
+                autoDrive(0.85, -72 - 16, -90 * autoDirection);
+            } else {
+                // skystone middley
+                autoDrive(0.85, -72 - 8, -90 * autoDirection);
+            }
         }
 
 //        autoOpenGrabber();
@@ -1423,34 +1438,37 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
 //        parkGrabber();
 //        servoGrabber.setPosition(grabberPosition);
 
-        // rotate to position
-        autoTurn(0 * autoDirection, autoDefaultTurnSpeed, 1, 5);
         // raise the lifter for clearance
         motorMast.setPower(0);
         motorMast.setTargetPosition(mastPresetHeights[2]);
         motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorMast.setPower(0.3);
+        sleep(250);
+
+        // rotate to position
+        autoTurn(0 * autoDirection, autoDefaultTurnSpeed, 1, 5);
 
         // drive into foundation and clamp
         autoFlagWhiskers = 4;
-        autoDrive(0.15, 10, 0 * autoDirection);
+        // was .15
+        autoDrive(0.2, 10, 0 * autoDirection);
 
         // extend jib
         moveGrabberToFoundation();
 
-        // Back up straight
-        autoDrive (0.5, -30, 0 * autoDirection);
+        // Back up straight was .5
+        autoDrive (0.65, -30, 0 * autoDirection);
 
         // drop the stone
         autoOpenGrabber();
 
-        // Push foundation square to side
-        autoDrive(0.5, 20, 90 * autoDirection);
+        // Push foundation square to side was 20"
+        autoDrive(0.5, 10, 90 * autoDirection);
         // Open whiskers and wait for them to clear
         autoStowWhiskers();
         //slide over so whiskers don't get stuck
         autoStrafe(0.25, -2 * autoDirection, 90 * autoDirection);
-        sleep(500);
+        //sleep(500);
         // Back away from foundation (just a little)
         autoDrive(0.5, -2, 90 * autoDirection);  //-12
 
@@ -1462,11 +1480,11 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         // 1 run into wall  (can probably make this less)
         autoStrafe(0.25, 26 * autoDirection, 90 * autoDirection);
         // 2 move to far position if necessary
-        if (autoParkingPosition == 2) {
+        //if (autoParkingPosition == 2) {
             autoStrafe(0.25, -26 * autoDirection, 90 * autoDirection);
-        }
-        // Back under Skybridge (added 10)
-        autoDrive(0.5, -40, 90 * autoDirection);  //-30
+        //}
+        // Back under Skybridge (added 10) was .5
+        autoDrive(1, -40, 90 * autoDirection);  //-30
 
     }
 }
