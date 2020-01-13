@@ -1449,18 +1449,24 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         autoTurn(0 * autoDirection, autoDefaultTurnSpeed, 1, 5);
 
         // drive into foundation and clamp
-        autoFlagWhiskers = 4;
+        autoFlagWhiskers = 6;
         // was .15
-        autoDrive(0.2, 10, 0 * autoDirection);
+        autoDrive(0.2, 12, 0 * autoDirection);
 
         // extend jib
         moveGrabberToFoundation();
 
         // Back up straight was .5
-        autoDrive (0.65, -30, 0 * autoDirection);
+        autoDrive (0.65, -32, 0 * autoDirection);
 
         // drop the stone
-        autoOpenGrabber();
+        //autoOpenGrabber();
+        servoGrabber.setPosition(grabberSafe);
+        //position the jib
+        motorJib.setPower(0);
+        motorJib.setTargetPosition(jibPositionPark);
+        motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorJib.setPower(0.5);
 
         // Push foundation square to side was 20"
         autoDrive(0.5, 10, 90 * autoDirection);
