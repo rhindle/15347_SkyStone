@@ -35,6 +35,7 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
     private Servo servoGrabber;
     private Servo servoLeftWhisker;
     private Servo servoRightWhisker;
+    private Servo servoCapstone;
 
     private BNO055IMU imu;
     private VuforiaSkyStone vuforiaSkyStone = new VuforiaSkyStone();
@@ -88,6 +89,13 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
     private double whiskerPosition;
     private final double whiskerUp = 0;
     private final double whiskerDown = 0.8;
+    private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
+
+    //capstone
+    private final double capstoneUp = 0.1;
+    private final double capstoneDown = 0.65;
+    private final double capstoneMove = 0.03;
+    private double capstonePosition = capstoneUp;
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
@@ -130,6 +138,7 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
+        servoCapstone = hardwareMap.servo.get("servo5");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
 
@@ -190,13 +199,16 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         initMotors();
         initIMU();
         autoStowWhiskers();
+        servoCapstone.setPosition(capstoneUp);
         grabberPosition = grabberSafe;
         servoGrabber.setPosition(grabberPosition);
+
         // Set digital i/o
         digitalMastHigh.setMode(DigitalChannel.Mode.INPUT);
         digitalJibHigh.setMode(DigitalChannel.Mode.INPUT);
         digitalMastLow.setMode(DigitalChannel.Mode.INPUT);
         digitalJibLow.setMode(DigitalChannel.Mode.INPUT);
+
         // Wait for Start...
         while (!isStarted()) {
             heading = getHeading();
@@ -204,17 +216,28 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
             // Prompt user to press start buton.
             telemetry.addData(">", "Press Play to Start");
             telemetry.addData("Heading", heading);
-            telemetry.addData("IMU OK?", imuOk ? "TRUE" : "*** FALSE ***");
+
+            //telemetry.addData("IMU OK?", imuOk ? "TRUE" : "*** FALSE ***");
+            if (!imuOk) {
+                telemetry.addData("IMU OK?", "*** FALSE ***");
+            } else if (Math.abs(heading)>0.2) {
+                telemetry.addData("IMU OK?", "*** Moved Too Much - Init Again");
+            } else {
+                telemetry.addData("IMU OK?", "TRUE");
+            }
+
             telemetry.addData("/////////////////////////////////////////////////////", " ");
             telemetry.addData("Alliance", autoAlliance == 1 ? "BLUE" : "RED");
-            telemetry.addData("Location", autoSide == 1 ? "FOUNDATION (BUILD SITE)" : "QUARRY (SKYSTONES)");
+//            telemetry.addData("Location", autoSide == 1 ? "FOUNDATION (BUILD SITE)" : "QUARRY (SKYSTONES)");
+            telemetry.addData("Location", autoSide == 1 ? "FOUNDATION" : "SKYSTONES");
 
             // ** for skystone + foundation
             if (autoSide == 3) {
-                telemetry.addData("++++++", "FULL DOUBLE AUTO");
+                telemetry.addData("++++++", "FULL DOUBLE AUTO (parks far)");
+            } else {
+                telemetry.addData("Parking", autoParkingPosition == 1 ? "NEAR" : "FAR");
             }
 
-            telemetry.addData("Parking", autoParkingPosition == 1 ? "NEAR" : "FAR");
             telemetry.addData("/////////////////////////////////////////////////////", " ");
             telemetry.addData("Crane Homed?", flagCraneIsHomed ? "TRUE" : "*** FALSE ***");
             telemetry.update();
@@ -286,6 +309,7 @@ public class Emmet_Autonomous_Experimental extends LinearOpMode {
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
+        servoCapstone.setDirection(Servo.Direction.REVERSE);
     }
 
     private void initIMU() {
