@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
-@TeleOp(name = "Emmet's TeleOp (Experimental)", group = "")
-public class Emmet_TeleOp_Experimental extends LinearOpMode {
+@TeleOp(name = "Emmet's TeleOp (OLD)", group = "")
+public class Emmet_TeleOp_Backup extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
@@ -26,7 +26,6 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
     private Servo servoGrabber;
     private Servo servoLeftWhisker;
     private Servo servoRightWhisker;
-    private Servo servoCapstone;
 
 
     private ElapsedTime Timer_Loop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -75,13 +74,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
     private double whiskerPosition;
     private final double whiskerUp = 0;
     private final double whiskerDown = 0.8;
-    private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
-
-    //capstone
-    private final double capstoneUp = 0.1;
-    private final double capstoneDown = 0.65;
-    private final double capstoneMove = 0.03;
-    private double capstonePosition = capstoneUp;
+    private final double whiskerSpeedLimit = 0.35;
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
@@ -104,7 +97,7 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
-        servoCapstone = hardwareMap.servo.get("servo5");
+
 
         initialize();
         if (opModeIsActive()) {
@@ -172,7 +165,6 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
-        servoCapstone.setDirection(Servo.Direction.REVERSE);
     }
 
     private double CalculateLoopTime() {
@@ -204,17 +196,9 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
         if (homingState != 0) {
             driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
         }
-//        if (mastPositionCurrent > 1500 || jibPositionCurrent > 2500) {
-//            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
-//        }
-
-        // new- don't use crane speed limit when whiskers down
         if (mastPositionCurrent > 1500 || jibPositionCurrent > 2500) {
-            if (whiskerPosition != whiskerDown) {
-                driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
-            }
+            driveSpeedLimit = Math.min(driveSpeedLimit, 0.2);
         }
-
         telemetry.addData("Speed Limit", driveSpeedLimit);
 
         //rest of controls
@@ -252,17 +236,6 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
             }
         }
         if (!gamepad2.dpad_up && !gamepad2.dpad_down) flagPresetRequested = false;
-
-        if(gamepad1.a) {
-            capstonePosition = capstonePosition + capstoneMove;
-            capstonePosition = Math.min(capstonePosition, capstoneDown);
-        }
-
-        if (gamepad1.b) {
-            capstonePosition = capstonePosition - capstoneMove;
-            capstonePosition = Math.max(capstonePosition, capstoneUp);
-        }
-
     }
 
     private void multiStageGrab() {
@@ -580,29 +553,18 @@ public class Emmet_TeleOp_Experimental extends LinearOpMode {
 
     private void controlServos() {
         servoGrabber.setPosition(grabberPosition);
-        servoCapstone.setPosition(capstonePosition);
 //        if (whiskerPosition == whiskerUp) {
 //            servoLeftWhisker.setPosition(whiskerPosition);
 //            servoRightWhisker.setPosition(whiskerPosition);
 //        }
-
-        //new to allow whiskers while supporting top block
-        if (gamepad1.right_bumper && gamepad1.left_bumper) {
-            whiskerPosition = whiskerDown;
-            servoLeftWhisker.setPosition(whiskerDown);
-            servoRightWhisker.setPosition(whiskerDown);
+        if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
+            servoLeftWhisker.setPosition(whiskerPosition);
+            servoRightWhisker.setPosition(whiskerPosition);
             driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
         } else {
-            if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
-                servoLeftWhisker.setPosition(whiskerPosition);
-                servoRightWhisker.setPosition(whiskerPosition);
-                driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
-            } else {
-                servoLeftWhisker.setPosition(whiskerUp);
-                servoRightWhisker.setPosition(whiskerUp);
-            }
+            servoLeftWhisker.setPosition(whiskerUp);
+            servoRightWhisker.setPosition(whiskerUp);
         }
-
     }
 
 
