@@ -146,11 +146,11 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         autoTimer.reset();
         if (opModeIsActive()) {
             if (autoSide == 1) {
-                autoMoveFoundation_test1();
+                autoMoveFoundation();
             } else if (autoSide == 2) {
-                autoGrabSkystone_test1();
+                autoGrabSkystone();
             } else if (autoSide == 3) {   // ** for skystone + foundation
-                autoGrabSkystone_test2();
+                autoSkystonePlusFoundation();
             }
             //autoFlashLightOn(true);
             // Put run blocks here.
@@ -1160,6 +1160,7 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         }
     }
 
+
     // move foundation
     private void autoMoveFoundation() {
         vuforiaSkyStone.deactivate();
@@ -1173,10 +1174,15 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         // Drive into foundation and grab it
         autoFlagWhiskers = 6;
         autoDrive(0.15, 12, 0 * autoDirection);
-        // Back up a little at a shallow angle
-        autoDrive(0.5, -12, 13 * autoDirection);
-        // Back up more at larger angle
-        autoDrive(0.5, -24, 30 * autoDirection);
+
+//        // Back up a little at a shallow angle
+//        autoDrive(0.5, -12, 13 * autoDirection);
+//        // Back up more at larger angle
+//        autoDrive(0.5, -24, 30 * autoDirection);
+
+        // Back up straight
+        autoDrive (0.5, -30, 0 * autoDirection);
+
         // Push foundation square to side
         autoDrive(0.5, 20, 90 * autoDirection);
         // Open whiskers and wait for them to clear
@@ -1222,120 +1228,14 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         telemetry.update();
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
-            autoStrafe(0.25, 12 * autoDirection, 0 * autoDirection);
+            //used to be 12, -3, 5
+            autoStrafe(0.25, 11.5 * autoDirection, 0 * autoDirection);
         } else if (autoSkystonePattern == 3) {
             // skystone 3rd from bridge
-            autoStrafe(0.25, -3 * autoDirection, 0 * autoDirection);
+            autoStrafe(0.25, -4.5 * autoDirection, 0 * autoDirection);
         } else {
             // skystone middley
-            autoStrafe(0.25, 5 * autoDirection, 0 * autoDirection);
-        }
-        //vuforiaSkyStone.deactivate();
-        autoStowWhiskers();
-        // Drive closer to stones
-        autoDrive(0.5, 10, 0 * autoDirection);
-        // drive slowly to stone
-        autoReadyGrabber();
-        autoFlagGrab = 8;
-        autoDrive(0.1, 10, 0 * autoDirection);
-        autoRaiseMast();
-        sleep(500);
-        // back up from stones
-        autoDrive(0.5, -12, 0 * autoDirection);
-        // drive beneath the bridge
-        //make changes here to allow near and far
-        if (autoSkystonePattern == 1) {
-            // skystone closest to bridge
-            autoDrive(0.5, 36, 90 * autoDirection);
-        } else if (autoSkystonePattern == 3) {
-            // skystone 3rd from bridge
-            autoDrive(0.5, 36 + 16, 90 * autoDirection);
-        } else {
-            // skystone middley
-            autoDrive(0.5, 36 + 8, 90 * autoDirection);
-        }
-        autoOpenGrabber();
-        sleep(500);
-        // back up and park
-        autoDrive(0.5, -12, 90 * autoDirection);
-        parkGrabber();
-        servoGrabber.setPosition(grabberPosition);
-    }
-
-    // move foundation
-    private void autoMoveFoundation_test1() {
-        vuforiaSkyStone.deactivate();
-        vuforiaSkyStone.close();
-        autoFlagWhiskers = 0;
-        autoStowWhiskers();
-        // Drive toward foundation
-        autoDrive(0.5, 24, 0 * autoDirection);
-        // Strafe to middle of foundation
-        autoStrafe(0.25, 12 * autoDirection, 0 * autoDirection);
-        // Drive into foundation and grab it
-        autoFlagWhiskers = 6;
-        autoDrive(0.15, 12, 0 * autoDirection);
-
-//        // Back up a little at a shallow angle
-//        autoDrive(0.5, -12, 13 * autoDirection);
-//        // Back up more at larger angle
-//        autoDrive(0.5, -24, 30 * autoDirection);
-
-        // Back up straight
-        autoDrive (0.5, -30, 0 * autoDirection);
-
-        // Push foundation square to side
-        autoDrive(0.5, 20, 90 * autoDirection);
-        // Open whiskers and wait for them to clear
-        autoStowWhiskers();
-        //slide over so whiskers don't get stuck
-        autoStrafe(0.25, -2 * autoDirection, 90 * autoDirection);
-        sleep(500);
-        // Back away from foundation
-        autoDrive(0.5, -12, 90 * autoDirection);
-        // Strafe into parking position
-        // 1 run into wall
-        autoStrafe(0.25, 26 * autoDirection, 90 * autoDirection);
-        // 2 move to far position if necessary
-        if (autoParkingPosition == 2) {
-            autoStrafe(0.25, -26 * autoDirection, 90 * autoDirection);
-        }
-        // Back under Skybridge
-        autoDrive(0.5, -30, 90 * autoDirection);
-    }
-
-    //grab skystone
-    private void autoGrabSkystone_test1() {
-        autoFlagWhiskers = 0;
-        autoFlagGrab = 0;
-        autoStowWhiskers();
-        autoLowerRightWhisker();
-        // Drive toward stones
-        autoDrive(0.15, 18, 0 * autoDirection);
-        sleep(500);
-        autoFlashLightOn(true);
-        sleep(500);
-        // turn toward left stone if nothing is detected
-        if (!isTargetVisible("Stone Target")) {
-            autoTurn(30, 0.5, 3, 1);
-            sleep(500);
-            autoTurn(0, 0.5, 1, 4);
-        }
-        autoFindSkystone();
-        vuforiaSkyStone.deactivate();
-        vuforiaSkyStone.close();
-        autoFlashLightOn(false);
-        telemetry.addData("Skystone Pattern", autoSkystonePattern);
-        telemetry.update();
-        if (autoSkystonePattern == 1) {
-            // skystone closest to bridge
-            autoStrafe(0.25, 12 * autoDirection, 0 * autoDirection);
-        } else if (autoSkystonePattern == 3) {
-            // skystone 3rd from bridge
-            autoStrafe(0.25, -3 * autoDirection, 0 * autoDirection);
-        } else {
-            // skystone middley
-            autoStrafe(0.25, 5 * autoDirection, 0 * autoDirection);
+            autoStrafe(0.25, 3.5 * autoDirection, 0 * autoDirection);
         }
         //vuforiaSkyStone.deactivate();
         autoStowWhiskers();
@@ -1358,13 +1258,13 @@ public class Emmet_Autonomous_New extends LinearOpMode {
 
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
-            autoDrive(0.5, 36, 90 * autoDirection);
+            autoDrive(0.5, 37.5, 90 * autoDirection);
         } else if (autoSkystonePattern == 3) {
             // skystone 3rd from bridge
-            autoDrive(0.5, 36 + 16, 90 * autoDirection);
+            autoDrive(0.5, 37.5 + 16, 90 * autoDirection);
         } else {
             // skystone middley
-            autoDrive(0.5, 36 + 8, 90 * autoDirection);
+            autoDrive(0.5, 37.5 + 8, 90 * autoDirection);
         }
         autoOpenGrabber();
         sleep(500);
@@ -1375,7 +1275,7 @@ public class Emmet_Autonomous_New extends LinearOpMode {
     }
 
     //grab skystone & move foundation
-    private void autoGrabSkystone_test2() {
+    private void autoSkystonePlusFoundation() {
         autoFlagWhiskers = 0;
         autoFlagGrab = 0;
         autoStowWhiskers();
@@ -1400,13 +1300,14 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         telemetry.update();
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
-            autoStrafe(0.25, 12 * autoDirection, 0 * autoDirection);
+            //used to be 12, -3, 5
+            autoStrafe(0.25, 11.5 * autoDirection, 0 * autoDirection);
         } else if (autoSkystonePattern == 3) {
             // skystone 3rd from bridge
-            autoStrafe(0.25, -3 * autoDirection, 0 * autoDirection);
+            autoStrafe(0.25, -4.5 * autoDirection, 0 * autoDirection);
         } else {
             // skystone middley
-            autoStrafe(0.25, 5 * autoDirection, 0 * autoDirection);
+            autoStrafe(0.25, 3.5 * autoDirection, 0 * autoDirection);
         }
         //vuforiaSkyStone.deactivate();
         autoStowWhiskers();
@@ -1434,24 +1335,24 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         if (autoAlliance == 2) {
             if (autoSkystonePattern == 1) {
                 // skystone closest to bridge was .5 .75 was ok degree was -90
-                autoDrive(0.85, -72, -89 * autoDirection);
+                autoDrive(0.85, -74, -89 * autoDirection);
             } else if (autoSkystonePattern == 3) {
                 // skystone 3rd from bridge
-                autoDrive(0.85, -72 - 16, -89 * autoDirection);
+                autoDrive(0.85, -74 - 16, -89 * autoDirection);
             } else {
                 // skystone middley
-                autoDrive(0.85, -72 - 8, -89 * autoDirection);
+                autoDrive(0.85, -74 - 8, -89 * autoDirection);
             }
         } else {
             if (autoSkystonePattern == 1) {
                 // skystone closest to bridge was .5 .75 was ok degree was -90
-                autoDrive(0.85, -72, -90 * autoDirection);
+                autoDrive(0.85, -74, -90 * autoDirection);
             } else if (autoSkystonePattern == 3) {
                 // skystone 3rd from bridge
-                autoDrive(0.85, -72 - 16, -90 * autoDirection);
+                autoDrive(0.85, -74 - 16, -90 * autoDirection);
             } else {
                 // skystone middley
-                autoDrive(0.85, -72 - 8, -90 * autoDirection);
+                autoDrive(0.85, -74 - 8, -90 * autoDirection);
             }
         }
 
