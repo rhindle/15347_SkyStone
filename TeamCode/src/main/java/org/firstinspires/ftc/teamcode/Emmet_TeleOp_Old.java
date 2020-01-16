@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
 @TeleOp(name = "Emmet's TeleOp (OLD)", group = "")
-public class Emmet_TeleOp_Backup extends LinearOpMode {
+public class Emmet_TeleOp_Old extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
