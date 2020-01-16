@@ -157,10 +157,10 @@ public class Emmet_TeleOp_New extends LinearOpMode {
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLeftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLeftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorRightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorLeftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorRightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorMast.setDirection(DcMotorSimple.Direction.FORWARD);
         motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
