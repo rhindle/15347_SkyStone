@@ -20,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
 @Autonomous(name = "Emmet's Autonomous (OLD)", group = "")
-public class Emmet_Autonomous_Backup extends LinearOpMode {
+public class Emmet_Autonomous_Old extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
     private DigitalChannel digitalJibHigh;
