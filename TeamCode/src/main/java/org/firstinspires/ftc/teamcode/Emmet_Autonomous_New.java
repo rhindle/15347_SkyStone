@@ -1118,8 +1118,8 @@ public class Emmet_Autonomous_New extends LinearOpMode {
     }
 
     //determine skystone position
-    private void autoFindSkystone() {
-        final int timeOut = 2;
+    private void autoFindSkystone(int timeOut) {
+        //final int timeOut = 2;
 
         autoSkystoneTimer.reset();
         autoSkystoneY = 0;
@@ -1220,7 +1220,7 @@ public class Emmet_Autonomous_New extends LinearOpMode {
             sleep(500);
             autoTurn(0, 0.5, 1, 4);
         }
-        autoFindSkystone();
+        autoFindSkystone(2);
         vuforiaSkyStone.deactivate();
         vuforiaSkyStone.close();
         autoFlashLightOn(false);
@@ -1258,13 +1258,13 @@ public class Emmet_Autonomous_New extends LinearOpMode {
 
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
-            autoDrive(0.5, 37.5, 90 * autoDirection);
+            autoDrive(0.5, 43.5, 90 * autoDirection);
         } else if (autoSkystonePattern == 3) {
             // skystone 3rd from bridge
-            autoDrive(0.5, 37.5 + 16, 90 * autoDirection);
+            autoDrive(0.5, 43.5 + 16, 90 * autoDirection);
         } else {
             // skystone middley
-            autoDrive(0.5, 37.5 + 8, 90 * autoDirection);
+            autoDrive(0.5, 43.5 + 8, 90 * autoDirection);
         }
         autoOpenGrabber();
         sleep(500);
@@ -1292,7 +1292,7 @@ public class Emmet_Autonomous_New extends LinearOpMode {
 //            sleep(500);
 //            autoTurn(0, 0.5, 1, 4);
 //        }
-        autoFindSkystone();
+        autoFindSkystone(1);
         vuforiaSkyStone.deactivate();
         vuforiaSkyStone.close();
         autoFlashLightOn(false);
@@ -1409,10 +1409,11 @@ public class Emmet_Autonomous_New extends LinearOpMode {
 
         // Strafe into parking position
         // 1 run into wall  (can probably make this less)
-        autoStrafe(0.25, 26 * autoDirection, 90 * autoDirection);
+        autoStrafe(0.4, 30 * autoDirection, 90 * autoDirection);
         // 2 move to far position if necessary
         //if (autoParkingPosition == 2) {
-            autoStrafe(0.25, -26 * autoDirection, 90 * autoDirection);
+        //was .25
+            autoStrafe(0.5, -26 * autoDirection, 90 * autoDirection);
         //}
         // Back under Skybridge (added 10) was .5
         autoDrive(1, -40, 90 * autoDirection);  //-30
