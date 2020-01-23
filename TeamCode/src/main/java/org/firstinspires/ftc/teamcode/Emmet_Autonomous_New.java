@@ -1413,10 +1413,10 @@ public class Emmet_Autonomous_New extends LinearOpMode {
         // 2 move to far position if necessary
         //if (autoParkingPosition == 2) {
         //was .25
-            autoStrafe(0.5, -26 * autoDirection, 90 * autoDirection);
+            autoStrafe(0.5, -24 * autoDirection, 90 * autoDirection);
         //}
         // Back under Skybridge (added 10) was .5
-        autoDrive(1, -40, 90 * autoDirection);  //-30
+        autoDrive(1, -38, 90 * autoDirection);  //-30
 
     }
 }
