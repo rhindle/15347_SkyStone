@@ -45,19 +45,19 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
 
     private int homingState;
 
-    private final int mastPositionMax = 6200;
+    /*private final int mastPositionMax = 6400;
     private final int mastPositionMin = 0;
     private final int mastPositionJibSafe = 200;
     private final int mastPositionBridgeSafe = 300;
-    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 1100, 2400, 3700, 5000, 6200};
-
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 1100, 2400, 3700, 5000, 6300};
+*/
     //new numbers for new motor: neverest 40
-    /*private final int mastPositionMax = 4133;
+    private final int mastPositionMax = 4267;
     private final int mastPositionMin = 0;
     private final int mastPositionJibSafe = 133;
     private final int mastPositionBridgeSafe = 200;
-    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4133};
-*/
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4200};
+
     private final int jibPositionMax = 3829;
     private final int jibPositionMin = 0;
     private final int jibPositionPark = 350;
@@ -85,9 +85,9 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
     private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
 
     //capstone
-    private final double capstoneUp = 0.12;
-    private final double capstoneDown = 1;
-    private final double capstoneMove = 0.05;
+    private final double capstoneUp = 0.14;
+    private final double capstoneDown = 0.97;
+    private final double capstoneMove = 0.025;
     private double capstonePosition = capstoneUp;
     private final double releaseOpen = 0.3;
     private final double releaseClose = 0.7;
@@ -114,8 +114,8 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
-        servoCapstone = hardwareMap.servo.get("servo3");
-        servoRelease = hardwareMap.servo.get("servo4");
+        servoCapstone = hardwareMap.servo.get("servo1B");
+        servoRelease = hardwareMap.servo.get("servo0B");
 
         initialize();
         if (opModeIsActive()) {
@@ -183,7 +183,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
-        servoCapstone.setDirection(Servo.Direction.REVERSE);
+        //servoCapstone.setDirection(Servo.Direction.REVERSE);
     }
 
     private double CalculateLoopTime() {
@@ -240,7 +240,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         //only allow these controls if it's not homing
         if (homingState == 0) {
             if (gamepad2.left_bumper && gamepad2.right_bumper) homingState = 1;
-            if (gamepad2.b) grabberPosition = grabberOpen;
+            if (gamepad2.b) grabberPosition = grabberSafe;
             if (gamepad2.a) grabberPosition = grabberClosed;
             if (gamepad2.back) {
                 whiskerPosition = whiskerDown;
@@ -265,7 +265,12 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         if (!gamepad2.dpad_up && !gamepad2.dpad_down) flagPresetRequested = false;
 
         if(gamepad1.a) {
-            capstonePosition = capstonePosition + capstoneMove;
+            if (capstonePosition < 0.75) {
+                capstonePosition = capstonePosition + capstoneMove;
+            } else {
+                capstonePosition = capstonePosition + capstoneMove / 4;
+            }
+
             capstonePosition = Math.min(capstonePosition, capstoneDown);
         }
 
@@ -289,6 +294,9 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
                     motorRightFront.setPower(0);
                     motorLeftRear.setPower(0);
                     motorRightRear.setPower(0);
+                    //move servo to grab to open position
+                    grabberPosition = grabberOpen;
+                    servoGrabber.setPosition(grabberPosition);
                     //push jib into the stone
                     motorJib.setPower(0);
                     motorJib.setTargetPosition(jibPositionCurrent + 1000);
@@ -332,7 +340,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
                 motorMast.setPower(0);
                 motorMast.setTargetPosition(mastPresetHeights[i]);
                 motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                motorMast.setPower(-0.5);
+                motorMast.setPower(-0.25);
 
                 flagMastHolding = true;
                 mastPositionHold = mastPresetHeights[i];
@@ -402,7 +410,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
             motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorJib.setPower(0.5);
             //ready the grabber
-            grabberPosition = grabberOpen;
+            grabberPosition = grabberSafe;
 
             flagMastHolding = true;
             flagJibHolding = true;
@@ -561,7 +569,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         //lift mast for second pass
         ///////////////////////////////////////////////////////// might want to change the 250
         if (homingState == 7) {
-            if (mastPositionCurrent >= 250) {
+            if (mastPositionCurrent >= 167) {
                 //get ready for next state
                 homingState++;
                 motorMast.setPower(0);
@@ -624,7 +632,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
 
 
     private void controlMast() {
-        int slowPoint = 2000;
+        int slowPoint = 1333;
 
         mastPositionCurrent = motorMast.getCurrentPosition();
         //upper limits
