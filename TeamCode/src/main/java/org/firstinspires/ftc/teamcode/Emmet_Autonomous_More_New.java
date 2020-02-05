@@ -58,18 +58,18 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
 
     private int homingState;
 
-    private final int mastPositionMax = 6200;
+    //new numbers for new motor: neverest 40
+    private final int mastPositionMax = 4267;
     private final int mastPositionMin = 0;
-    private final int mastPositionJibSafe = 200;
-    private final int mastPositionBridgeSafe = 300;
+    private final int mastPositionJibSafe = 133;
+    private final int mastPositionBridgeSafe = 200;
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4200};
 
     private final int jibPositionMax = 3900;
     private final int jibPositionMin = 0;
     private final int jibPositionPark = 350;
     private final int jibPositionGrab = 1000;
     private final int jibPositionPlace = 1675;
-
-    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 1100, 2400, 3700, 5000, 6200};
 
     private int mastPositionHold;
     private int mastPositionCurrent;
@@ -712,8 +712,9 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
         }
 
         //lift mast for second pass
+        ///////////////////////////////////////////////////////// might want to change the 250
         if (homingState == 7) {
-            if (mastPositionCurrent >= 250) {
+            if (mastPositionCurrent >= 167) {
                 //get ready for next state
                 homingState++;
                 motorMast.setPower(0);
