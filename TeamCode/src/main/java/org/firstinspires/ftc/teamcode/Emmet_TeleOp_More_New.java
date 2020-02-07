@@ -23,6 +23,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
     private DcMotor motorRightRear;
     private DcMotor motorMast;
     private DcMotor motorJib;
+    private DcMotor motorTape;
     private Servo servoGrabber;
     private Servo servoLeftWhisker;
     private Servo servoRightWhisker;
@@ -111,6 +112,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         motorRightRear = hardwareMap.dcMotor.get("motor3");
         motorMast = hardwareMap.dcMotor.get("motor0B");
         motorJib = hardwareMap.dcMotor.get("motor1B");
+        motorTape = hardwareMap.dcMotor.get("motor2B");
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
@@ -180,6 +182,10 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         motorJib.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorJib.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorTape.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorTape.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorTape.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorTape.setDirection(DcMotorSimple.Direction.REVERSE);
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
@@ -282,6 +288,14 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         if (gamepad1.x && gamepad1.y) {
             releasePosition = releaseOpen;
         } else releasePosition = releaseClose;
+
+        if (gamepad1.dpad_up) {
+            motorTape.setPower(0.5);
+        } else if (gamepad1.dpad_down) {
+            motorTape.setPower(-0.5);
+        } else {
+            motorTape.setPower(0);
+        }
 
     }
 
