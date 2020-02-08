@@ -289,7 +289,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
             releasePosition = releaseOpen;
         } else releasePosition = releaseClose;
 
-        if (gamepad1.dpad_up) {
+        if (gamepad1.dpad_up && motorTape.getCurrentPosition() < 12837) {
             motorTape.setPower(0.5);
         } else if (gamepad1.dpad_down) {
             motorTape.setPower(-0.5);
