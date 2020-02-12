@@ -38,7 +38,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
     private final int homingTimeLimit = 10;
 
     private double driveSpeedLimit;
-    private final double driveSpeedDefault = 0.35;
+    private final double driveSpeedDefault = 0.5; //.35
 
     private double controlDrive;
     private double controlStrafe;
@@ -87,7 +87,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
 
     //capstone
     private final double capstoneUp = 0.14;
-    private final double capstoneDown = 0.97;
+    private final double capstoneDown = 0.95;
     private final double capstoneMove = 0.025;
     private double capstonePosition = capstoneUp;
     private final double releaseOpen = 0.3;
@@ -290,8 +290,8 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         } else releasePosition = releaseClose;
 
         if (gamepad1.dpad_up && motorTape.getCurrentPosition() < 12837) {
-            motorTape.setPower(0.5);
-        } else if (gamepad1.dpad_down) {
+            motorTape.setPower(1);
+        } else if (gamepad1.dpad_down && motorTape.getCurrentPosition() > 0) {
             motorTape.setPower(-0.5);
         } else {
             motorTape.setPower(0);
