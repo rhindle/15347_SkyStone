@@ -114,7 +114,7 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
     private final double autoMinTurnSpeed = 0.06;
     private final double autoPulsesPerInch = (383.6 / (3.73 * Math.PI)) * 2;
     private final double autoStrafeFactor = 1.275;
-    private final double autoDefaultTurnSpeed = 0.5;
+    private final double autoDefaultTurnSpeed = 0.75; //was 0.5
     private int autoFlagWhiskers;
     private int autoFlagGrab;
     private ElapsedTime autoTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -1009,6 +1009,7 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
         double currentError;
         double speedCorrection = 0;
         final double maxCorrection = 0.2;
+        double speedAdjust;
 
         if (opModeIsActive()) {
             autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
@@ -1031,17 +1032,18 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
             motorRightRear.setPower(driveSpeed);
             while (opModeIsActive() && motorLeftRear.isBusy() && motorRightRear.isBusy() && motorRightFront.isBusy() && motorLeftFront.isBusy()) {
                 currentError = getError(targetHeading);
-                speedCorrection = Math.abs(currentError / 50); //adjust as needed
+                speedCorrection = Math.abs(currentError / 25); //used to be 50
                 speedCorrection = Math.min(maxCorrection, speedCorrection);
                 // correct the sign back to the error
                 speedCorrection *= Math.signum(currentError);
                 // correct the sign to match the direction
                 speedCorrection *= Math.signum(driveDistance);
                 // future work, scale if speeds end up greater than 1
-                motorLeftFront.setPower(driveSpeed - speedCorrection);
-                motorRightFront.setPower(driveSpeed + speedCorrection);
-                motorLeftRear.setPower(driveSpeed - speedCorrection);
-                motorRightRear.setPower(driveSpeed + speedCorrection);
+                speedAdjust = Math.max(Math.abs(driveSpeed) + Math.abs(speedCorrection), 1);
+                motorLeftFront.setPower((driveSpeed - speedCorrection) / speedAdjust);
+                motorRightFront.setPower((driveSpeed + speedCorrection) / speedAdjust);
+                motorLeftRear.setPower((driveSpeed - speedCorrection) / speedAdjust);
+                motorRightRear.setPower((driveSpeed + speedCorrection) / speedAdjust);
                 telemetry.addData("current heading", getHeading());
                 telemetry.addData("target heading", targetHeading);
                 telemetry.addData("error", currentError);
@@ -1072,6 +1074,7 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
         double speedCorrection = 0;
         final double maxCorrection = 0.2;
         driveDistance *= autoStrafeFactor;
+        double speedAdjust;
 
         if (opModeIsActive()) {
             autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
@@ -1094,17 +1097,18 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
             motorRightRear.setPower(driveSpeed);
             while (opModeIsActive() && motorLeftRear.isBusy() && motorRightRear.isBusy() && motorRightFront.isBusy() && motorLeftFront.isBusy()) {
                 currentError = getError(targetHeading);
-                speedCorrection = Math.abs(currentError / 50); //adjust as needed
+                speedCorrection = Math.abs(currentError / 25); //was 50
                 speedCorrection = Math.min(maxCorrection, speedCorrection);
                 // correct the sign back to the error
                 speedCorrection *= Math.signum(currentError);
                 // correct the sign to match the direction
                 speedCorrection *= Math.signum(driveDistance);
                 // future work, scale if speeds end up greater than 1
-                motorLeftFront.setPower(driveSpeed - speedCorrection);
-                motorRightFront.setPower(driveSpeed + speedCorrection);
-                motorLeftRear.setPower(driveSpeed - speedCorrection);
-                motorRightRear.setPower(driveSpeed + speedCorrection);
+                speedAdjust = Math.max(Math.abs(driveSpeed) + Math.abs(speedCorrection), 1);
+                motorLeftFront.setPower((driveSpeed - speedCorrection) / speedAdjust);
+                motorRightFront.setPower((driveSpeed + speedCorrection) / speedAdjust);
+                motorLeftRear.setPower((driveSpeed - speedCorrection) / speedAdjust);
+                motorRightRear.setPower((driveSpeed + speedCorrection) / speedAdjust);
                 telemetry.addData("current heading", getHeading());
                 telemetry.addData("target heading", targetHeading);
                 telemetry.addData("error", currentError);
@@ -1282,10 +1286,10 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
         autoStowWhiskers();
         autoLowerRightWhisker();
         // Drive toward stones previous speed 0.15
-        autoDrive(0.25 , 18, 0 * autoDirection); // ** speed up?
+        autoDrive(0.5 , 18, 0 * autoDirection); // ** speed up?
         //sleep(500);
         autoFlashLightOn(true);
-        sleep(750);
+        //sleep(1000);
         // turn toward left stone if nothing is detected
 // skip this for speed
 //        if (!isTargetVisible("Stone Target")) {
@@ -1293,7 +1297,7 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
 //            sleep(500);
 //            autoTurn(0, 0.5, 1, 4);
 //        }
-        autoFindSkystone(1);
+        autoFindSkystone(2);
         vuforiaSkyStone.deactivate();
         vuforiaSkyStone.close();
         autoFlashLightOn(false);
@@ -1316,7 +1320,6 @@ public class Emmet_Autonomous_More_New extends LinearOpMode {
         autoDrive(0.6, 10, 0 * autoDirection);
         // drive slowly to stone
         autoReadyGrabber();
-        // was 8 and 10"
         autoFlagGrab = 8;
         autoDrive(0.15, 10, 0 * autoDirection);  //0.1
         autoRaiseMast();
