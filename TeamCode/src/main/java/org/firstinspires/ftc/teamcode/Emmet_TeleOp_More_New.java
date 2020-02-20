@@ -57,7 +57,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
     private final int mastPositionMin = 0;
     private final int mastPositionJibSafe = 133;
     private final int mastPositionBridgeSafe = 200;
-    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4200};
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4267};
 
     private final int jibPositionMax = 3829;
     private final int jibPositionMin = 0;
@@ -68,6 +68,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
     private int mastPositionHold;
     private int mastPositionCurrent;
     private double controlMastPower;
+    private int currentStackHeight = 1;
 
     private int jibPositionHold;
     private int jibPositionCurrent;
@@ -267,8 +268,16 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
                 flagPresetRequested = true;
                 moveDownPresetHeights();
             }
+            if (gamepad2.right_trigger > 0.75 && !flagPresetRequested) {
+                flagPresetRequested = true;
+                moveToNextHeight();
+            }
+            if (gamepad2.left_trigger > 0.75 && !flagPresetRequested) {
+                flagPresetRequested = true;
+                moveDownSlightly();
+            }
         }
-        if (!gamepad2.dpad_up && !gamepad2.dpad_down) flagPresetRequested = false;
+        if (!gamepad2.dpad_up && !gamepad2.dpad_down && gamepad2.right_trigger < 0.75 && gamepad2.left_trigger < 0.75) flagPresetRequested = false;
 
         if(gamepad1.a) {
             if (capstonePosition < 0.75) {
@@ -289,14 +298,44 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
             releasePosition = releaseOpen;
         } else releasePosition = releaseClose;
 
-        if (gamepad1.dpad_up && motorTape.getCurrentPosition() < 12837) {
-            motorTape.setPower(1);
-        } else if (gamepad1.dpad_down && motorTape.getCurrentPosition() > 0) {
-            motorTape.setPower(-0.5);
+        if (gamepad1.dpad_up) {
+            if (motorTape.getCurrentPosition() < 12837) {
+                motorTape.setPower(1);
+            }
+        } else if (gamepad1.dpad_down) {
+            if (motorTape.getCurrentPosition() > 0) {
+                motorTape.setPower(-0.5);
+            }
         } else {
             motorTape.setPower(0);
         }
 
+    }
+
+    private void moveToNextHeight() {
+        currentStackHeight++;
+        if (currentStackHeight < 2) currentStackHeight = 2;
+        if (currentStackHeight >= mastPresetHeights.length) {
+            currentStackHeight = mastPresetHeights.length - 1;
+        }
+        motorMast.setPower(0);
+        motorMast.setTargetPosition(mastPresetHeights[currentStackHeight]);
+        motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorMast.setPower(1);
+        moveGrabberToFoundation();
+
+        flagMastHolding = true;
+        mastPositionHold = mastPresetHeights[currentStackHeight];
+    }
+
+    private void moveDownSlightly() {
+        if (flagMastHolding && mastPositionHold > 100) {
+            motorMast.setPower(0);
+            mastPositionHold -= 100;
+            motorMast.setTargetPosition(mastPositionHold);
+            motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motorMast.setPower(0.5);
+        }
     }
 
     private void multiStageGrab() {
@@ -358,6 +397,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
 
                 flagMastHolding = true;
                 mastPositionHold = mastPresetHeights[i];
+                if (i > 1) currentStackHeight = i;
                 break;
             }
         }
@@ -373,6 +413,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
 
                 flagMastHolding = true;
                 mastPositionHold = mastPresetHeights[i];
+                //if (i > 1) currentStackHeight = i;
                 break;
             }
         }
