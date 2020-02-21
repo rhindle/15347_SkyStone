@@ -397,7 +397,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
 
                 flagMastHolding = true;
                 mastPositionHold = mastPresetHeights[i];
-                if (i > 1) currentStackHeight = i;
+                if (i > 0) currentStackHeight = i;
                 break;
             }
         }
@@ -498,6 +498,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
             telemetry.addData("Encoders B", mastPositionCurrent + "   " + jibPositionCurrent);
         }
         telemetry.addData("Servo", JavaUtil.formatNumber(grabberPosition, 2));
+        telemetry.addData("Stack Height", currentStackHeight);
     }
 
     private void homeCrane() {
