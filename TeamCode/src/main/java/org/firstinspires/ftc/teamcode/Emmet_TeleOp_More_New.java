@@ -53,17 +53,19 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
     private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 1100, 2400, 3700, 5000, 6300};
 */
     //new numbers for new motor: neverest 40
-    private final int mastPositionMax = 4267;
+    //max was 4267 true max is 6600
+    private final int mastPositionMax = 6300;
     private final int mastPositionMin = 0;
     private final int mastPositionJibSafe = 133;
     private final int mastPositionBridgeSafe = 200;
-    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4267};
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1650, 2534, 3400, 4267, 5145, 6010};
+    //private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4267, 5145, 6010};
 
-    private final int jibPositionMax = 3829;
-    private final int jibPositionMin = 0;
-    private final int jibPositionPark = 350;
-    private final int jibPositionGrab = 1000;
-    private final int jibPositionPlace = 1675;
+    private final int jibPositionMax = 3829; // 3829
+    private final int jibPositionMin = 0; //0
+    private final int jibPositionPark = 200; //350
+    private final int jibPositionGrab = 850; //1000
+    private final int jibPositionPlace = 1525; //1675
 
     private int mastPositionHold;
     private int mastPositionCurrent;
@@ -285,7 +287,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
             } else {
                 capstonePosition = capstonePosition + capstoneMove / 4;
             }
-
+            moveJibToPosistion(jibPositionPark);
             capstonePosition = Math.min(capstonePosition, capstoneDown);
         }
 
@@ -322,16 +324,17 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         motorMast.setTargetPosition(mastPresetHeights[currentStackHeight]);
         motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorMast.setPower(1);
-        moveGrabberToFoundation();
+
+        moveJibToPosistion(jibPositionPlace + (55 * (currentStackHeight - 2)));
 
         flagMastHolding = true;
         mastPositionHold = mastPresetHeights[currentStackHeight];
     }
 
     private void moveDownSlightly() {
-        if (flagMastHolding && mastPositionHold > 100) {
+        if (flagMastHolding && mastPositionHold > 200) {
             motorMast.setPower(0);
-            mastPositionHold -= 100;
+            mastPositionHold -= 200;
             motorMast.setTargetPosition(mastPositionHold);
             motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorMast.setPower(0.5);
@@ -419,6 +422,17 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         }
     }
 
+    private void  moveJibToPosistion(int targetPosition) {
+        //position the jib
+        motorJib.setPower(0);
+        motorJib.setTargetPosition(targetPosition);
+        motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorJib.setPower(0.5);
+
+        flagJibHolding = true;
+        jibPositionHold = targetPosition;
+    }
+
     private void  moveGrabberToFoundation() {
         //position the jib
         motorJib.setPower(0);
@@ -498,7 +512,7 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
             telemetry.addData("Encoders B", mastPositionCurrent + "   " + jibPositionCurrent);
         }
         telemetry.addData("Servo", JavaUtil.formatNumber(grabberPosition, 2));
-        telemetry.addData("Stack Height", currentStackHeight);
+        telemetry.addData("Stack Height", currentStackHeight - 1);
     }
 
     private void homeCrane() {
@@ -722,7 +736,11 @@ public class Emmet_TeleOp_More_New extends LinearOpMode {
         if (controlMastPower != 0) {
             if (flagMastHolding){
                 motorMast.setPower(0);
-                motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                if (controlMastPower > 0) {
+                    motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                } else {
+                    motorMast.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                }
                 flagMastHolding = false;
             }
             motorMast.setPower(controlMastPower);
