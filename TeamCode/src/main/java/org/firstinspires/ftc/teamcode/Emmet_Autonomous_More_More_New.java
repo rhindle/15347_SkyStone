@@ -1288,7 +1288,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
     }
 
     //grab skystone & move foundation
-    private void autoSkystonePlusFoundation() {
+    private void autoSkystonePlusFoundationOld() {
         autoFlagWhiskers = 0;
         autoFlagGrab = 0;
         readDistance(1, 24, 6); /////////////////////////////////////////////////////////////////////////Take this out
@@ -1443,12 +1443,215 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         if (distance > max || distance < min) {
             distance = -1;
         }
-        while (!gamepad2.b && opModeIsActive()) {
+        /*while (!gamepad2.b && opModeIsActive()) {
             telemetry.addData("Left Distance", String.format("%.01f in", sensorDistanceLeft.getDistance(DistanceUnit.INCH)));
             telemetry.addData("Right Distance", String.format("%.01f in", sensorDistanceRight.getDistance(DistanceUnit.INCH)));
             telemetry.addData("Returning Distance", String.format("%.01f in", distance));
             telemetry.update();
-        }
+        }*/
         return distance;
     }
+
+    private void autoSkystonePlusFoundation() {
+        autoFlagWhiskers = 0;
+        autoFlagGrab = 0;
+        //readDistance(1, 24, 6); /////////////////////////////////////////////////////////////////////////Take this out
+        autoStowWhiskers();
+        autoLowerRightWhisker();
+        // Drive toward stones previous speed 0.15
+        autoDrive(0.5 , 18, 0 * autoDirection); // ** speed up?
+        //sleep(500);
+        autoFlashLightOn(true);
+        //sleep(1000);
+        // turn toward left stone if nothing is detected
+// skip this for speed
+//        if (!isTargetVisible("Stone Target")) {
+//            autoTurn(30, 0.5, 3, 1);
+//            sleep(500);
+//            autoTurn(0, 0.5, 1, 4);
+//        }
+        autoFindSkystone(2);
+        vuforiaSkyStone.deactivate();
+        vuforiaSkyStone.close();
+        autoFlashLightOn(false);
+        telemetry.addData("Skystone Pattern", autoSkystonePattern);
+        telemetry.update();
+        if (autoSkystonePattern == 1) {
+            // skystone closest to bridge
+            //used to be 12, -3, 5
+            autoStrafe(0.25, 11.5 * autoDirection, 0 * autoDirection);
+        } else if (autoSkystonePattern == 3) {
+            // skystone 3rd from bridge
+            autoStrafe(0.25, -4.5 * autoDirection, 0 * autoDirection);
+        } else {
+            // skystone middley
+            autoStrafe(0.25, 3.5 * autoDirection, 0 * autoDirection);
+        }
+        //vuforiaSkyStone.deactivate();
+        autoStowWhiskers();
+        // Drive closer to stones was .5
+        autoDrive(0.6, 10, 0 * autoDirection);
+        // drive slowly to stone
+        autoReadyGrabber();
+        autoFlagGrab = 8;
+        autoDrive(0.15, 10, 0 * autoDirection);  //0.1
+        autoRaiseMast();
+        sleep(500);
+        // back up from stones was -12
+        autoDrive(0.5, -13, 0 * autoDirection);
+        // drive beneath the bridge
+        //make changes here to allow near and far
+// no near movement in this one
+//        if (autoParkingPosition == 1) { //near
+//            // run into wall
+//            autoStrafe(0.25, 26 * autoDirection, 90 * autoDirection);
+//        }
+
+// now driving backwards for safety
+        //1 = blue, 2 = red
+        if (autoAlliance == 2) {
+            if (autoSkystonePattern == 1) {
+                // skystone closest to bridge was .5 .75 was ok degree was -90
+                autoDrive(1, -74, -89 * autoDirection);
+            } else if (autoSkystonePattern == 3) {
+                // skystone 3rd from bridge
+                autoDrive(1, -74 - 16, -89 * autoDirection);
+            } else {
+                // skystone middley
+                autoDrive(1, -74 - 8, -89 * autoDirection);
+            }
+        } else {
+            if (autoSkystonePattern == 1) {
+                // skystone closest to bridge was .5 .75 was ok degree was -90
+                autoDrive(1, -74, -90 * autoDirection);
+            } else if (autoSkystonePattern == 3) {
+                // skystone 3rd from bridge
+                autoDrive(1, -74 - 16, -90 * autoDirection);
+            } else {
+                // skystone middley
+                autoDrive(1, -74 - 8, -90 * autoDirection);
+            }
+        }
+
+//        autoOpenGrabber();
+//        sleep(500);
+//        // back up and park
+//        autoDrive(0.5, -12, 90 * autoDirection);
+//        parkGrabber();
+//        servoGrabber.setPosition(grabberPosition);
+
+        // raise the lifter for clearance
+        motorMast.setPower(0);
+        motorMast.setTargetPosition(mastPresetHeights[2]);
+        motorMast.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorMast.setPower(0.3);
+        sleep(250);
+
+        // rotate to position
+        autoTurn(0 * autoDirection, autoDefaultTurnSpeed, 1, 5);
+
+        // drive into foundation and clamp
+        autoFlagWhiskers = 6;
+        // was .15
+        autoDrive(0.2, 12, 0 * autoDirection);
+
+        // extend jib
+        moveGrabberToFoundation();
+
+        // Back up straight was .5
+        autoDrive (0.65, -32, 0 * autoDirection);
+
+        // drop the stone
+        //autoOpenGrabber();
+        servoGrabber.setPosition(grabberSafe);
+        //position the jib
+        motorJib.setPower(0);
+        motorJib.setTargetPosition(jibPositionPark);
+        motorJib.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorJib.setPower(0.5);
+
+
+        // Push foundation square to side was 20"
+        autoDrive(0.5, 10, 90 * autoDirection);
+        // Open whiskers and wait for them to clear
+        autoStowWhiskers();
+        //slide over so whiskers don't get stuck
+        //autoStrafe(0.25, -2 * autoDirection, 90 * autoDirection);
+        //sleep(500);
+        // Back away from foundation (just a little)
+        autoDrive(0.5, -2, 90 * autoDirection);  //-12
+
+        // stow the grabber
+        parkGrabber();
+        servoGrabber.setPosition(grabberPosition);
+
+        /*// Strafe into parking position
+        // 1 run into wall  (can probably make this less)
+        autoStrafe(0.4, 30 * autoDirection, 90 * autoDirection);
+        // 2 move to far position if necessary
+        //if (autoParkingPosition == 2) {
+        //was .25
+        autoStrafe(0.5, -24 * autoDirection, 90 * autoDirection);
+        //}
+        // Back under Skybridge (added 10) was .5
+        autoDrive(1, -38, 90 * autoDirection);  //-30 */
+
+        double strafeDistance;
+        strafeDistance = readDistance(1, 36, 6);
+
+        autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
+
+        if (autoSkystonePattern == 3) {
+            autoDrive(1, -38, 90 * autoDirection);
+        } else {
+            autoDrive(1, -99, 90 * autoDirection);
+
+            strafeDistance = readDistance(1, 36, 6);
+            autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
+
+            autoTurn(0, autoDefaultTurnSpeed, 1, 5);
+
+            strafeDistance = readDistance(-1, 24, 2);
+
+            if (autoSkystonePattern == 1) {
+                // skystone closest to bridge
+                //used to be 12, -3, 5  //0.25
+                autoStrafe(0.5, (14 - strafeDistance) * autoDirection, 0 * autoDirection);
+            } else {
+                // skystone middley
+                autoStrafe(0.5, (6 - strafeDistance) * autoDirection, 0 * autoDirection);
+            }
+
+            // drive slowly to stone
+            autoReadyGrabber();
+            autoFlagGrab = 8;
+            autoDrive(0.15, 10, 0 * autoDirection);  //0.1
+            autoRaiseMast();
+            sleep(500);
+            // back up from stones was -12
+            autoDrive(0.5, -13, 0 * autoDirection);
+
+            // drive beneath the bridge
+            //make changes here to allow near and far
+
+            if (autoSkystonePattern == 1) {
+                // skystone closest to bridge
+                autoDrive(1, 61.5, 90 * autoDirection);
+            } else {
+                // skystone middley
+                autoDrive(1, 61.5 + 8, 90 * autoDirection);
+            }
+            autoOpenGrabber();
+            sleep(250);
+            // back up and park
+            autoDrive(1, -12, 90 * autoDirection);
+            parkGrabber();
+            servoGrabber.setPosition(grabberPosition);
+        }
+
+
+
+    }
+
+
 }
