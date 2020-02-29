@@ -71,11 +71,11 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
     private final int mastPositionBridgeSafe = 200;
     private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4200};
 
-    private final int jibPositionMax = 3900;
-    private final int jibPositionMin = 0;
-    private final int jibPositionPark = 350;
-    private final int jibPositionGrab = 1000;
-    private final int jibPositionPlace = 1675;
+    private final int jibPositionMax = 3829; // 3829
+    private final int jibPositionMin = 0; //0
+    private final int jibPositionPark = 200; //350
+    private final int jibPositionGrab = 850; //1000
+    private final int jibPositionPlace = 1525; //1675
 
     private int mastPositionHold;
     private int mastPositionCurrent;
@@ -117,7 +117,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
     private int autoSkystonePattern;
     private double autoSkystoneY;
     private boolean flagIsGobilda = false;
-    private final double autoMinTurnSpeed = 0.06;
+    private final double autoMinTurnSpeed = 0.06; //.06
     private final double autoPulsesPerInch = (383.6 / (3.73 * Math.PI)) * 2;
     private final double autoStrafeFactor = 1.275;
     private final double autoDefaultTurnSpeed = 0.75; //was 0.5
@@ -967,7 +967,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         double turnDirection;
         double turnSpeedProportional;
         int confidenceCounter = 0;
-        double slowDownPoint = 45;
+        double slowDownPoint = 45; //45
 
         if (opModeIsActive()) {
             currentError = getError(targetHeading);
@@ -1020,7 +1020,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         double speedAdjust;
 
         if (opModeIsActive()) {
-            autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
+            autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 2);
             startPosition = motorLeftFront.getCurrentPosition();
             motorLeftFront.setPower(0);
             motorRightFront.setPower(0);
@@ -1048,6 +1048,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
                 speedCorrection *= Math.signum(driveDistance);
                 // future work, scale if speeds end up greater than 1
                 speedAdjust = Math.max(Math.abs(driveSpeed) + Math.abs(speedCorrection), 1);
+                speedAdjust=1;
                 motorLeftFront.setPower((driveSpeed - speedCorrection) / speedAdjust);
                 motorRightFront.setPower((driveSpeed + speedCorrection) / speedAdjust);
                 motorLeftRear.setPower((driveSpeed - speedCorrection) / speedAdjust);
@@ -1056,6 +1057,8 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
                 telemetry.addData("target heading", targetHeading);
                 telemetry.addData("error", currentError);
                 telemetry.addData("correction", speedCorrection);
+                telemetry.addData("left", (driveSpeed - speedCorrection) / speedAdjust);
+                telemetry.addData("right", (driveSpeed + speedCorrection) / speedAdjust);
                 telemetry.update();
                 //special functions for skystone
                 if (autoFlagWhiskers != 0 && motorLeftFront.getCurrentPosition() > startPosition + autoFlagWhiskers * autoPulsesPerInch) {
@@ -1080,12 +1083,12 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         int startPosition;
         double currentError;
         double speedCorrection = 0;
-        final double maxCorrection = 0.2;
+        final double maxCorrection = 0; //0.2
         driveDistance *= autoStrafeFactor;
         double speedAdjust;
 
         if (opModeIsActive()) {
-            autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
+            //autoTurn(targetHeading, autoDefaultTurnSpeed, 1, 5);
             startPosition = motorLeftFront.getCurrentPosition();
             motorLeftFront.setPower(0);
             motorRightFront.setPower(0);
@@ -1452,6 +1455,11 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         return distance;
     }
 
+    /////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    private void autoSkystonePlusFoundationTest() {
+        autoDrive(.8, 80, 0);
+    }
+
     private void autoSkystonePlusFoundation() {
         autoFlagWhiskers = 0;
         autoFlagGrab = 0;
@@ -1479,7 +1487,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
             //used to be 12, -3, 5
-            autoStrafe(0.25, 11.5 * autoDirection, 0 * autoDirection);
+            autoStrafe(0.25, 13.5 * autoDirection, 0 * autoDirection);
         } else if (autoSkystonePattern == 3) {
             // skystone 3rd from bridge
             autoStrafe(0.25, -4.5 * autoDirection, 0 * autoDirection);
@@ -1494,7 +1502,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         // drive slowly to stone
         autoReadyGrabber();
         autoFlagGrab = 8;
-        autoDrive(0.15, 10, 0 * autoDirection);  //0.1
+        autoDrive(0.25, 10, 0 * autoDirection);  //0.15
         autoRaiseMast();
         sleep(500);
         // back up from stones was -12
@@ -1558,8 +1566,8 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         // extend jib
         moveGrabberToFoundation();
 
-        // Back up straight was .5
-        autoDrive (0.65, -32, 0 * autoDirection);
+        // Back up straight was .5 also -32
+        autoDrive (0.65, -26, 0 * autoDirection);
 
         // drop the stone
         //autoOpenGrabber();
@@ -1599,18 +1607,26 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
         double strafeDistance;
         strafeDistance = readDistance(1, 36, 6);
 
+        //align to back under bridge
         autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
 
         if (autoSkystonePattern == 3) {
+            //give up if skystone can't be reached
             autoDrive(1, -38, 90 * autoDirection);
         } else {
-            autoDrive(1, -99, 90 * autoDirection);
+            //drive back to stones
+            autoDrive(1, -95, 90 * autoDirection); //-99
 
+            //make sure it's the right distance from the stones
             strafeDistance = readDistance(1, 36, 6);
-            autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
+            if (Math.abs(28 - strafeDistance) > 1) {
+                autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
+            }
 
+            //turn to face stones
             autoTurn(0, autoDefaultTurnSpeed, 1, 5);
 
+            //find distance from sidewall
             strafeDistance = readDistance(-1, 24, 2);
 
             if (autoSkystonePattern == 1) {
@@ -1625,15 +1641,14 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
             // drive slowly to stone
             autoReadyGrabber();
             autoFlagGrab = 8;
-            autoDrive(0.15, 10, 0 * autoDirection);  //0.1
+            autoDrive(0.25, 10, 0 * autoDirection);  //0.15
             autoRaiseMast();
             sleep(500);
+
             // back up from stones was -12
             autoDrive(0.5, -13, 0 * autoDirection);
 
             // drive beneath the bridge
-            //make changes here to allow near and far
-
             if (autoSkystonePattern == 1) {
                 // skystone closest to bridge
                 autoDrive(1, 61.5, 90 * autoDirection);
@@ -1643,6 +1658,7 @@ public class Emmet_Autonomous_More_More_New extends LinearOpMode {
             }
             autoOpenGrabber();
             sleep(250);
+
             // back up and park
             autoDrive(1, -12, 90 * autoDirection);
             parkGrabber();
