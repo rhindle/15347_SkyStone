@@ -98,10 +98,13 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
     private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
 
     //capstone
-    private final double capstoneUp = 0.1;
-    private final double capstoneDown = 0.65;
-    private final double capstoneMove = 0.03;
+    private final double capstoneUp = 0.1; //0.14;
+    private final double capstoneDown = 0.95;
+    private final double capstoneMove = 0.025;
     private double capstonePosition = capstoneUp;
+    private final double releaseOpen = 0.3;
+    private final double releaseClose = 0.7;
+    private double releasePosition = releaseClose;
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
@@ -144,7 +147,8 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
-        servoCapstone = hardwareMap.servo.get("servo5");
+        //servoCapstone = hardwareMap.servo.get("servo5");
+        servoCapstone = hardwareMap.servo.get("servo1B");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         sensorDistanceLeft = hardwareMap.get(DistanceSensor.class, "distanceL");
         sensorDistanceRight = hardwareMap.get(DistanceSensor.class, "distanceR");
@@ -317,7 +321,7 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
-        servoCapstone.setDirection(Servo.Direction.REVERSE);
+        //servoCapstone.setDirection(Servo.Direction.REVERSE);
     }
 
     private void initIMU() {
@@ -1017,6 +1021,7 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
         double currentError;
         double speedCorrection = 0;
         final double maxCorrection = 0.4;  //0.2
+        //final double maxCorrection = Math.abs(0.4 * driveSpeed);
         double speedAdjust;
 
         if (opModeIsActive()) {
@@ -1035,12 +1040,15 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
             motorLeftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorRightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorLeftFront.setPower(driveSpeed);
+            motorRightRear.setPower(driveSpeed);
             motorRightFront.setPower(driveSpeed);
             motorLeftRear.setPower(driveSpeed);
-            motorRightRear.setPower(driveSpeed);
+
             while (opModeIsActive() && motorLeftRear.isBusy() && motorRightRear.isBusy() && motorRightFront.isBusy() && motorLeftFront.isBusy()) {
                 currentError = getError(targetHeading);
-                speedCorrection = Math.abs(currentError / 25); //used to be 50
+                speedCorrection = Math.abs(currentError / 5); //used to be 50
+                speedCorrection = Math.abs(currentError / (25-20*Math.abs(driveSpeed)));
+
                 speedCorrection = Math.min(maxCorrection, speedCorrection);
                 // correct the sign back to the error
                 speedCorrection *= Math.signum(currentError);
@@ -1069,6 +1077,17 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
                     autoFlagGrab = 0;
                     autoCloseGrabber();
                 }
+//                if (autoFlagWhiskers != 0 || autoFlagGrab != 0) {
+//                    int position = motorLeftFront.getCurrentPosition();
+//                    if (autoFlagWhiskers != 0 && position > startPosition + autoFlagWhiskers * autoPulsesPerInch) {
+//                        autoFlagWhiskers = 0;
+//                        autoLowerWhiskers();
+//                    }
+//                    if (autoFlagGrab != 0 && position > startPosition + autoFlagGrab * autoPulsesPerInch) {
+//                        autoFlagGrab = 0;
+//                        autoCloseGrabber();
+//                    }
+//                }
             }
             motorLeftFront.setPower(0);
             motorRightFront.setPower(0);
@@ -1466,8 +1485,9 @@ public class Debug_Autonomous_More_More_New extends LinearOpMode {
             if (gamepad1.y) testPower += 0.05;
             if (gamepad1.b) testDirection *= -1;
             if (gamepad1.a) {
+                autoTurn(0,0.6,0.5,3);
                 autoTimer.reset();
-                autoDrive(testPower, 120 * testDirection, 0);
+                autoDrive(testPower, 96 * testDirection, 0);
                 testTime=autoTimer.time(TimeUnit.MILLISECONDS);
                 testDirection *= -1;
             }
