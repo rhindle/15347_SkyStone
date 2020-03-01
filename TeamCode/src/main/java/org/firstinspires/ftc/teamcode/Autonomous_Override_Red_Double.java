@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name = "Auto: Red / Double", group = "")
-public class Autonomous_Override_Red_Double extends Emmet_Autonomous_More_New {
+public class Autonomous_Override_Red_Double extends Emmet_Autonomous_Needham_Updated {
 
     @Override
     void setAutonomousVariables() {
