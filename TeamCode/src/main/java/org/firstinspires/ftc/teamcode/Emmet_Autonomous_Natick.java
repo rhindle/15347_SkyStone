@@ -1478,10 +1478,10 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         //readDistance(1, 24, 6); /////////////////////////////////////////////////////////////////////////Take this out
         autoStowWhiskers();
         autoLowerRightWhisker();
+        autoFlashLightOn(true);
         // Drive toward stones previous speed 0.15
         autoDrive(0.5 , 18, 0 * autoDirection); // ** speed up?
         //sleep(500);
-        autoFlashLightOn(true);
         //sleep(1000);
         // turn toward left stone if nothing is detected
 // skip this for speed
