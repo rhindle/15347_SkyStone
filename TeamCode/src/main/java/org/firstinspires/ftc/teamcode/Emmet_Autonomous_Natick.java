@@ -1499,7 +1499,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         if (autoSkystonePattern == 1) {
             // skystone closest to bridge
             //used to be 12, -3, 5
-            autoStrafe(0.25, 13.5 * autoDirection, 0 * autoDirection);
+            autoStrafe(0.25, 11.5 * autoDirection, 0 * autoDirection);
         } else if (autoSkystonePattern == 3) {
             // skystone 3rd from bridge
             autoStrafe(0.25, -4.5 * autoDirection, 0 * autoDirection);
