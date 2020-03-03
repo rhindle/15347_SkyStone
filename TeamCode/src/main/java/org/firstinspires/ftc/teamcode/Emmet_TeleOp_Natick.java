@@ -89,7 +89,7 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
     private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
 
     //capstone
-    private final double capstoneUp = 0.14;
+    private final double capstoneUp = 0.1; //.14
     private final double capstoneDown = 0.95;
     private final double capstoneMove = 0.025;
     private double capstonePosition = capstoneUp;
@@ -281,7 +281,7 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
         }
         if (!gamepad2.dpad_up && !gamepad2.dpad_down && gamepad2.right_trigger < 0.75 && gamepad2.left_trigger < 0.75) flagPresetRequested = false;
 
-        if(gamepad1.a) {
+        if(gamepad1.a && grabberPosition != grabberClosed) {
             if (capstonePosition < 0.75) {
                 capstonePosition = capstonePosition + capstoneMove;
             } else {
@@ -688,7 +688,8 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
             servoRightWhisker.setPosition(whiskerDown);
             driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
         } else {
-            if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
+//            if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
+            if (whiskerPosition == whiskerDown) {
                 servoLeftWhisker.setPosition(whiskerPosition);
                 servoRightWhisker.setPosition(whiskerPosition);
                 driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);

@@ -23,6 +23,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaBase;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
+import java.util.concurrent.TimeUnit;
+
 @TeleOp(name = "Emmet's Autonomous (Natick - States)", group = "")
 public class Emmet_Autonomous_Natick extends LinearOpMode {
 
@@ -98,10 +100,13 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
     private final double whiskerSpeedLimit = 0.275; //0.35, was 0.2
 
     //capstone
-    private final double capstoneUp = 0.1;
-    private final double capstoneDown = 0.65;
-    private final double capstoneMove = 0.03;
+    private final double capstoneUp = 0.1; //.14
+    private final double capstoneDown = 0.95;
+    private final double capstoneMove = 0.025;
     private double capstonePosition = capstoneUp;
+    private final double releaseOpen = 0.3;
+    private final double releaseClose = 0.7;
+    private double releasePosition = releaseClose;
 
     private boolean flagCraneIsHomed = false;
     private boolean flagMastHolding = false;
@@ -144,7 +149,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         servoGrabber = hardwareMap.servo.get("servo0");
         servoLeftWhisker = hardwareMap.servo.get("servo1");
         servoRightWhisker = hardwareMap.servo.get("servo2");
-        servoCapstone = hardwareMap.servo.get("servo5");
+        servoCapstone = hardwareMap.servo.get("servo1B");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         sensorDistanceLeft = hardwareMap.get(DistanceSensor.class, "distanceL");
         sensorDistanceRight = hardwareMap.get(DistanceSensor.class, "distanceR");
@@ -317,7 +322,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         servoGrabber.setDirection(Servo.Direction.FORWARD);
         servoLeftWhisker.setDirection(Servo.Direction.FORWARD);
         servoRightWhisker.setDirection(Servo.Direction.REVERSE);
-        servoCapstone.setDirection(Servo.Direction.REVERSE);
+        //servoCapstone.setDirection(Servo.Direction.REVERSE);
     }
 
     private void initIMU() {
@@ -989,6 +994,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
                     turnSpeedProportional = Math.abs(currentError) / slowDownPoint * turnSpeed;
                     turnSpeedProportional = Math.max(turnSpeedProportional, autoMinTurnSpeed);
                 }
+                telemetry.addData("Time", autoTimer.time(TimeUnit.MILLISECONDS));
                 telemetry.addData("current heading", getHeading());
                 telemetry.addData("target heading", targetHeading);
                 telemetry.addData("error", currentError);
@@ -1016,7 +1022,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         int startPosition;
         double currentError;
         double speedCorrection = 0;
-        final double maxCorrection = 0.2;
+        final double maxCorrection = 0.4; //.2 !!!
         double speedAdjust;
 
         if (opModeIsActive()) {
@@ -1035,12 +1041,13 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
             motorLeftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorRightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motorLeftFront.setPower(driveSpeed);
+            motorRightRear.setPower(driveSpeed);
             motorRightFront.setPower(driveSpeed);
             motorLeftRear.setPower(driveSpeed);
-            motorRightRear.setPower(driveSpeed);
+
             while (opModeIsActive() && motorLeftRear.isBusy() && motorRightRear.isBusy() && motorRightFront.isBusy() && motorLeftFront.isBusy()) {
                 currentError = getError(targetHeading);
-                speedCorrection = Math.abs(currentError / 25); //used to be 50
+                speedCorrection = Math.abs(currentError / (25 - 20 * Math.abs(driveSpeed))); //scales the correction, high numbers work best at low speed and vice versa
                 speedCorrection = Math.min(maxCorrection, speedCorrection);
                 // correct the sign back to the error
                 speedCorrection *= Math.signum(currentError);
@@ -1048,11 +1055,12 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
                 speedCorrection *= Math.signum(driveDistance);
                 // future work, scale if speeds end up greater than 1
                 speedAdjust = Math.max(Math.abs(driveSpeed) + Math.abs(speedCorrection), 1);
-                speedAdjust=1;
+                //speedAdjust=1;
                 motorLeftFront.setPower((driveSpeed - speedCorrection) / speedAdjust);
                 motorRightFront.setPower((driveSpeed + speedCorrection) / speedAdjust);
                 motorLeftRear.setPower((driveSpeed - speedCorrection) / speedAdjust);
                 motorRightRear.setPower((driveSpeed + speedCorrection) / speedAdjust);
+                telemetry.addData("Time", autoTimer.time(TimeUnit.MILLISECONDS));
                 telemetry.addData("current heading", getHeading());
                 telemetry.addData("target heading", targetHeading);
                 telemetry.addData("error", currentError);
@@ -1061,13 +1069,16 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
                 telemetry.addData("right", (driveSpeed + speedCorrection) / speedAdjust);
                 telemetry.update();
                 //special functions for skystone
-                if (autoFlagWhiskers != 0 && motorLeftFront.getCurrentPosition() > startPosition + autoFlagWhiskers * autoPulsesPerInch) {
-                    autoFlagWhiskers = 0;
-                    autoLowerWhiskers();
-                }
-                if (autoFlagGrab != 0 && motorLeftFront.getCurrentPosition() > startPosition + autoFlagGrab * autoPulsesPerInch) {
-                    autoFlagGrab = 0;
-                    autoCloseGrabber();
+                if (autoFlagWhiskers != 0 || autoFlagGrab != 0) {
+                    int position = motorLeftFront.getCurrentPosition();
+                    if (autoFlagWhiskers != 0 && position > startPosition + autoFlagWhiskers * autoPulsesPerInch) {
+                        autoFlagWhiskers = 0;
+                        autoLowerWhiskers();
+                    }
+                    if (autoFlagGrab != 0 && position > startPosition + autoFlagGrab * autoPulsesPerInch) {
+                        autoFlagGrab = 0;
+                        autoCloseGrabber();
+                    }
                 }
             }
             motorLeftFront.setPower(0);
@@ -1120,6 +1131,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
                 motorRightFront.setPower((driveSpeed + speedCorrection) / speedAdjust);
                 motorLeftRear.setPower((driveSpeed - speedCorrection) / speedAdjust);
                 motorRightRear.setPower((driveSpeed + speedCorrection) / speedAdjust);
+                telemetry.addData("Time", autoTimer.time(TimeUnit.MILLISECONDS));
                 telemetry.addData("current heading", getHeading());
                 telemetry.addData("target heading", targetHeading);
                 telemetry.addData("error", currentError);
@@ -1593,19 +1605,22 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         parkGrabber();
         servoGrabber.setPosition(grabberPosition);
 
-        /*// Strafe into parking position
-        // 1 run into wall  (can probably make this less)
-        autoStrafe(0.4, 30 * autoDirection, 90 * autoDirection);
-        // 2 move to far position if necessary
-        //if (autoParkingPosition == 2) {
-        //was .25
-        autoStrafe(0.5, -24 * autoDirection, 90 * autoDirection);
-        //}
-        // Back under Skybridge (added 10) was .5
-        autoDrive(1, -38, 90 * autoDirection);  //-30 */
-
         double strafeDistance;
         strafeDistance = readDistance(1, 36, 6);
+
+        if (strafeDistance == -1) {
+            // Strafe into parking position
+            // 1 run into wall  (can probably make this less)
+            autoStrafe(0.4, 30 * autoDirection, 90 * autoDirection);
+            // 2 move to far position if necessary
+            //if (autoParkingPosition == 2) {
+            //was .25
+            autoStrafe(0.5, -24 * autoDirection, 90 * autoDirection);
+            //}
+            // Back under Skybridge (added 10) was .5
+            autoDrive(1, -38, 90 * autoDirection);  //-30 */
+            return;
+        }
 
         //align to back under bridge
         autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
@@ -1619,6 +1634,10 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
 
             //make sure it's the right distance from the stones
             strafeDistance = readDistance(1, 36, 6);
+
+            if (strafeDistance == -1) {
+                strafeDistance = 28;
+            }
             if (Math.abs(28 - strafeDistance) > 1) {
                 autoStrafe(0.5, -(28 - strafeDistance) * autoDirection, 90 * autoDirection);
             }
@@ -1628,6 +1647,9 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
 
             //find distance from sidewall
             strafeDistance = readDistance(-1, 24, 2);
+            if (strafeDistance == -1) {
+                strafeDistance = 10;
+            }
 
             if (autoSkystonePattern == 1) {
                 // skystone closest to bridge
