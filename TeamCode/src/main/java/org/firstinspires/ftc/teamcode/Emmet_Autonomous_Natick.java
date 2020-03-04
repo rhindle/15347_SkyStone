@@ -25,7 +25,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaSkyStone;
 
 import java.util.concurrent.TimeUnit;
 
-@TeleOp(name = "Emmet's Autonomous (Natick - States)", group = "")
+@Autonomous(name = "Emmet's Autonomous (Natick - States)", group = "")
 public class Emmet_Autonomous_Natick extends LinearOpMode {
 
     private DigitalChannel digitalMastHigh;
@@ -1478,7 +1478,6 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         //readDistance(1, 24, 6); /////////////////////////////////////////////////////////////////////////Take this out
         autoStowWhiskers();
         autoLowerRightWhisker();
-        autoFlashLightOn(true);
         // Drive toward stones previous speed 0.15
         autoDrive(0.5 , 18, 0 * autoDirection); // ** speed up?
         //sleep(500);
@@ -1490,7 +1489,8 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
 //            sleep(500);
 //            autoTurn(0, 0.5, 1, 4);
 //        }
-        autoFindSkystone(2);
+        autoFlashLightOn(true);
+        autoFindSkystone(1);
         vuforiaSkyStone.deactivate();
         vuforiaSkyStone.close();
         autoFlashLightOn(false);
@@ -1510,15 +1510,15 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         //vuforiaSkyStone.deactivate();
         autoStowWhiskers();
         // Drive closer to stones was .5
-        autoDrive(0.6, 10, 0 * autoDirection);
+        //autoDrive(0.6, 10, 0 * autoDirection);
         // drive slowly to stone
         autoReadyGrabber();
-        autoFlagGrab = 8;
-        autoDrive(0.25, 10, 0 * autoDirection);  //0.15
+        autoFlagGrab = 16; //was 18
+        autoDrive(0.4, 19, 0 * autoDirection);  //0.15
         autoRaiseMast();
         sleep(500);
         // back up from stones was -12
-        autoDrive(0.5, -13, 0 * autoDirection);
+        autoDrive(0.5, -12, 0 * autoDirection);
         // drive beneath the bridge
         //make changes here to allow near and far
 // no near movement in this one
@@ -1571,9 +1571,9 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
         autoTurn(0 * autoDirection, autoDefaultTurnSpeed, 1, 5);
 
         // drive into foundation and clamp
-        autoFlagWhiskers = 6;
-        // was .15
-        autoDrive(0.2, 12, 0 * autoDirection);
+        autoFlagWhiskers = 7;
+        // was .2
+        autoDrive(0.25, 14, 0 * autoDirection);
 
         // extend jib
         moveGrabberToFoundation();
@@ -1663,26 +1663,26 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
             // drive slowly to stone
             autoReadyGrabber();
             autoFlagGrab = 8;
-            autoDrive(0.25, 10, 0 * autoDirection);  //0.15
+            autoDrive(0.4, 11, 0 * autoDirection);  //0.15
             autoRaiseMast();
             sleep(500);
 
             // back up from stones was -12
-            autoDrive(0.5, -13, 0 * autoDirection);
+            autoDrive(0.5, -11, 0 * autoDirection);
 
-            // drive beneath the bridge
+            // drive beneath the bridge was 61.5
             if (autoSkystonePattern == 1) {
                 // skystone closest to bridge
-                autoDrive(1, 61.5, 90 * autoDirection);
+                autoDrive(1, 59, 90 * autoDirection);
             } else {
                 // skystone middley
-                autoDrive(1, 61.5 + 8, 90 * autoDirection);
+                autoDrive(1, 59 + 8, 90 * autoDirection);
             }
             autoOpenGrabber();
             sleep(250);
 
             // back up and park
-            autoDrive(1, -12, 90 * autoDirection);
+            autoDrive(1, -9, 90 * autoDirection);
             parkGrabber();
             servoGrabber.setPosition(grabberPosition);
         }
