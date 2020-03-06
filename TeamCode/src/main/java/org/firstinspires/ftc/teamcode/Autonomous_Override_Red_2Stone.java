@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "A Auto: Red / 2 Stone", group = "")
+@Autonomous(name = "A--- Auto: Red 2 Stone", group = "")
 public class Autonomous_Override_Red_2Stone extends Emmet_Autonomous_Natick {
 
     @Override

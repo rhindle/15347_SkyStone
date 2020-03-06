@@ -90,7 +90,7 @@ public class Emmet_Autonomous_Natick extends LinearOpMode {
     private double grabberPosition;
     private final double grabberOpen = 0.6;
     private final double grabberClosed = 0.4;
-    private final double grabberSafe = 0.8;
+    private final double grabberSafe = 0.78;
     private final double grabberHoming = 0.6;
 
     //whiskers

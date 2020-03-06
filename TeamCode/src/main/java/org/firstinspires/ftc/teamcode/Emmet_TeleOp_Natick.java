@@ -58,7 +58,8 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
     private final int mastPositionMin = 0;
     private final int mastPositionJibSafe = 133;
     private final int mastPositionBridgeSafe = 200;
-    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1650, 2534, 3400, 4267, 5145, 6010};
+    private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 833, 1750, 2634, 3500, 4367, 5245, 6110};
+    //private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1650, 2534, 3400, 4267, 5145, 6010};
     //private final int mastPresetHeights[] = {0, mastPositionBridgeSafe, 733, 1600, 2467, 3333, 4267, 5145, 6010};
 
     private final int jibPositionMax = 3829; // 3900
@@ -79,7 +80,7 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
     private double grabberPosition;
     private final double grabberOpen = 0.6;
     private final double grabberClosed = 0.4;
-    private final double grabberSafe = 0.8;
+    private final double grabberSafe = 0.78; //.8 brass
     private final double grabberHoming = 0.6;
 
     //whiskers
@@ -566,7 +567,7 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
                 flagMastHolding = true;
                 //get ready for next state
                 homingState++;
-                servoGrabber.setPosition(grabberClosed);
+                servoGrabber.setPosition(grabberOpen);
                 motorJib.setPower(0);
                 motorJib.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 motorJib.setPower(-0.35);
