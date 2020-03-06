@@ -173,10 +173,10 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
         motorRightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorLeftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorRightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        motorLeftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        motorRightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLeftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorMast.setDirection(DcMotorSimple.Direction.FORWARD);
         motorMast.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorMast.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -686,13 +686,17 @@ public class Emmet_TeleOp_Natick extends LinearOpMode {
             whiskerPosition = whiskerDown;
             servoLeftWhisker.setPosition(whiskerDown);
             servoRightWhisker.setPosition(whiskerDown);
-            driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
+            if(!gamepad2.right_bumper) {
+                driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
+            }
         } else {
 //            if (whiskerPosition == whiskerDown && Math.abs(jibPositionCurrent - jibPositionPark) < 100 && flagCraneIsHomed) {
             if (whiskerPosition == whiskerDown) {
                 servoLeftWhisker.setPosition(whiskerPosition);
                 servoRightWhisker.setPosition(whiskerPosition);
-                driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
+                if (gamepad2.right_bumper) {
+                    driveSpeedLimit = Math.min(driveSpeedLimit, whiskerSpeedLimit);
+                }
             } else {
                 servoLeftWhisker.setPosition(whiskerUp);
                 servoRightWhisker.setPosition(whiskerUp);
