@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Auto: Blue / Foundation / Far", group = "")
+@Autonomous(name = "Old: Blue / Foundation / Far", group = "")
 public class Autonomous_Override_Blue_Foundation_Far extends Emmet_Autonomous_Needham_Updated {
 
     @Override
