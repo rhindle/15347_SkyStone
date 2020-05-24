@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -14,15 +15,26 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-@TeleOp(name = "LK_Field_Centric_Drive", group = "")
+import java.lang.reflect.Field;
+import java.util.List;
+
+@TeleOp(name = "LK_FCD_Odo_Test", group = "")
 //@Disabled
-public class LK_Field_Centric_Drive extends LinearOpMode {
+public class LK_Field_Centric_Drive_Odo_Test extends LinearOpMode {
 
     private BNO055IMU imu;
-    private DcMotor motor0;
+    /*private DcMotor motor0;
     private DcMotor motor2;
     private DcMotor motor1;
-    private DcMotor motor3;
+    private DcMotor motor3; */
+
+    private DcMotorEx motor0, motor2, motor1, motor3, odoX, odoY;
+    private long encoder0, encoder2, encoder1, encoder3, encoderX, encoderY;
+    private long encoderX0, encoderY0;
+
+    private static double eTicksPerInch = 82300 / 48;
+
+    private double yPos, xPos;
 
     private ElapsedTime elapsedTime; // = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -30,6 +42,7 @@ public class LK_Field_Centric_Drive extends LinearOpMode {
     private double timeLoop;
 
     private double globalHeading;
+    private double globalHeading0;
     private double storedHeading = 0;
     private double deltaHeading = 0;
     private int toggleRotate;
@@ -49,24 +62,99 @@ public class LK_Field_Centric_Drive extends LinearOpMode {
     @Override
     public void runOpMode() {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        motor0 = hardwareMap.dcMotor.get("motor0");
+        /* motor0 = hardwareMap.dcMotor.get("motor0");
         motor2 = hardwareMap.dcMotor.get("motor2");
         motor1 = hardwareMap.dcMotor.get("motor1");
-        motor3 = hardwareMap.dcMotor.get("motor3");
+        motor3 = hardwareMap.dcMotor.get("motor3"); */
+
+        // Important Step 1:  Make sure you use DcMotorEx when you instantiate your motors.
+        motor0 = hardwareMap.get(DcMotorEx.class, "motor0");  // Configure the robot to use these 4 motor names,
+        motor2 = hardwareMap.get(DcMotorEx.class, "motor2");  // or change these strings to match your existing Robot Configuration.
+        motor1 = hardwareMap.get(DcMotorEx.class, "motor1");
+        motor3 = hardwareMap.get(DcMotorEx.class, "motor3");
+        odoX = hardwareMap.get(DcMotorEx.class, "motor0B");
+        odoY = hardwareMap.get(DcMotorEx.class, "motor1B");
+
+        // Important Step 2: Get access to a list of Expansion Hub Modules to enable changing caching methods.
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
         initialize();
+
+        // Important Step 3: Option B. Set all Expansion hubs to use the MANUAL Bulk Caching mode
+        // Bug info https://github.com/FIRST-Tech-Challenge/SkyStone/issues/232
+        /*for (LynxModule module : allHubs) {
+            module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+        }*/
+        for(LynxModule module : allHubs){
+            module.clearBulkCache();
+            try {
+                Class<LynxModule> LynxModuleClass = LynxModule.class;
+                Field lynxModuleField = LynxModuleClass.getDeclaredField("lastBulkData");
+                lynxModuleField.setAccessible(true);
+                lynxModuleField.set(module,module.getBulkData());
+            }catch(NoSuchFieldException|IllegalAccessException e){
+                e.printStackTrace();
+            }
+        }
+
+        encoderX0 = odoX.getCurrentPosition();
+        encoderY0 = odoY.getCurrentPosition();
+        globalHeading0 = getHeading();
+
         if (opModeIsActive()) {
             // Put run blocks here.
             while (opModeIsActive()) {
+
+                // Important Step 4: If you are using MANUAL mode, you must clear the BulkCache once per control cycle
+                for (LynxModule module : allHubs) {
+                    module.clearBulkCache();
+                }
+
+                //encoder0 = motor0.getCurrentPosition();
+                //encoder1 = motor1.getCurrentPosition();
+                //encoder2 = motor2.getCurrentPosition();
+                //encoder3 = motor3.getCurrentPosition();
+                encoderX = odoX.getCurrentPosition();
+                encoderY = odoY.getCurrentPosition();
+
+
                 // Display orientation info.
                 globalHeading = getHeading();
+
+                updateXY();
+
                 addTelemetryLoopStart();
                 Controls();
                 telemetry.addData("rot about Z", globalHeading);
                 addTelemetryLoopEnd();
+
+                telemetry.addData ("OdoX", encoderX);
+                telemetry.addData ("OdoY", encoderY);
+                telemetry.addData ("X", xPos);
+                telemetry.addData ("Y", yPos);
                 telemetry.update();
             }
         }
+    }
+
+    private void updateXY () {
+        double deltaEncX, deltaEncY, avgHeading;
+
+        deltaEncX = (encoderX - encoderX0) / eTicksPerInch;
+        deltaEncY = (encoderY - encoderY0) / eTicksPerInch;
+
+        // Future - figure out average heading.  Challenge is the wrap.  Maybe use getError, /2, add to heading???
+
+        yPos = yPos + deltaEncY * Math.cos(Math.toRadians(globalHeading));
+        xPos = xPos - deltaEncY * Math.sin(Math.toRadians(globalHeading));
+
+        yPos = yPos + deltaEncX * Math.sin(Math.toRadians(globalHeading));
+        xPos = xPos + deltaEncX * Math.cos(Math.toRadians(globalHeading));
+
+
+        encoderX0 = encoderX;
+        encoderY0 = encoderY;
+        globalHeading0 = globalHeading;
     }
 
     /**
@@ -203,10 +291,13 @@ public class LK_Field_Centric_Drive extends LinearOpMode {
         motor2.setDirection(DcMotorSimple.Direction.FORWARD);
         motor1.setDirection(DcMotorSimple.Direction.REVERSE);
         motor3.setDirection(DcMotorSimple.Direction.REVERSE);
+        odoY.setDirection(DcMotorSimple.Direction.REVERSE);
         motor0.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odoX.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odoY.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor0.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
