@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,19 +13,29 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-@TeleOp(name = "6W 2M Drive Test", group = "")
+@TeleOp(name = "6W 2M Spinner Test", group = "")
 //@Disabled
-public class PID_2wheel_Drive_Test extends LinearOpMode {
+public class Spinner_Test_1 extends LinearOpMode {
 
     private DcMotor motorLeft;
     private DcMotor motorRight;
+    private DcMotor motorSpin;
 
     private BNO055IMU imu;
 
     private ElapsedTime timerLoop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private double timeLoop;
 
+    private ElapsedTime spinTimerLoop = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private double spinTimeLoop;
+    double spinSpeed;
+    double spinPower;
+    int spinEncoder;
+
     private double globalHeading;
+    private int spinCount = 0;
+    //private double loopTime;
+
     //private double storedHeading = 0;
     private double deltaHeading = 0;
 
@@ -36,6 +45,7 @@ public class PID_2wheel_Drive_Test extends LinearOpMode {
     public void runOpMode() {
         motorLeft = hardwareMap.dcMotor.get("motor0");
         motorRight = hardwareMap.dcMotor.get("motor1");
+        motorSpin = hardwareMap.dcMotor.get("motor3");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
         initialize();
@@ -59,18 +69,19 @@ public class PID_2wheel_Drive_Test extends LinearOpMode {
                     bumped = false;
                 }*/
 
-                driveControls();
+                //driveControls();
+                spinControls();
 
                 if (!gamepad1.right_bumper) bumped=false;
 
-                if (gamepad1.right_bumper) rotateToZero();
+                //if (gamepad1.right_bumper) rotateToZero();
 
                 if (gamepad1.dpad_left) {
-                    autoTurn(globalHeading+1.5,1,0.5,10);
+                    //autoTurn(globalHeading+1.5,1,0.5,10);
                 }
 
                 if (gamepad1.dpad_right) {
-                    autoTurn(globalHeading-1.5,1,0.5,10);
+                    //autoTurn(globalHeading-1.5,1,0.5,10);
                 }
 
                 if (gamepad1.left_bumper) {
@@ -84,13 +95,47 @@ public class PID_2wheel_Drive_Test extends LinearOpMode {
                 }
                 telemetry.addData("forza", forza);
 
-                if (gamepad1.x) jogover(1);
-                if (gamepad1.a) jogover (-1);
+                //if (gamepad1.x) jogover(1);
+                //if (gamepad1.a) jogover (-1);
 
                 addTelemetryLoopEnd();
                 telemetry.update();
             }
         }
+    }
+
+    private void spinControls() {
+        //145.6
+        //int spinEncoder;
+
+        spinTimeLoop = spinTimerLoop.milliseconds();
+        if (spinTimeLoop > 1000){
+            spinTimerLoop.reset();
+            spinEncoder = motorSpin.getCurrentPosition();
+            spinCount = spinEncoder - spinCount;
+            spinSpeed = spinCount / spinTimeLoop * 1000 * 60 / 145.6 * 7;  //1:7 ratio
+            spinCount = spinEncoder;
+        }
+
+        if (gamepad2.left_stick_y != 0) spinPower = -gamepad2.left_stick_y;
+
+        if (gamepad2.dpad_up) {
+            spinPower += .01;
+            if (spinPower > 1) spinPower = 1;
+        }
+        if (gamepad2.dpad_down) {
+            spinPower -= .01;
+            if (spinPower < -1) spinPower = -1;
+        }
+        if (gamepad2.b) spinPower = 0;
+
+        telemetry.addData("RPM", spinSpeed);
+        telemetry.addData("spinPower", spinPower);
+        telemetry.addData ("spinCount", spinCount);
+        telemetry.addData ("encoder", spinEncoder);
+
+        motorSpin.setPower(spinPower);
+
     }
 
     private void driveControls(){
@@ -215,7 +260,9 @@ public class PID_2wheel_Drive_Test extends LinearOpMode {
 
     private void addTelemetryLoopStart() {
         // Other debugging stuff
+        //loopTime=calculateLoopTime();
         telemetry.addData("Loop time (ms)", JavaUtil.formatNumber(calculateLoopTime(), 0));
+        //telemetry.addData("Loop time (ms)", JavaUtil.formatNumber(loopTime, 0));
         telemetry.addData("heading", globalHeading);
         telemetry.addData("deltaheading", deltaHeading);
         telemetry.addData("effectiveheading", globalHeading-deltaHeading);
@@ -272,6 +319,11 @@ public class PID_2wheel_Drive_Test extends LinearOpMode {
 
         motorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        motorSpin.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorSpin.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorSpin.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorSpin.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
     private void initIMU() {
